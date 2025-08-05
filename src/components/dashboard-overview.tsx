@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,6 +26,10 @@ interface DashboardOverviewProps {
 export function DashboardOverview({ budgetSummary, guestSummary, taskSummary }: DashboardOverviewProps) {
   const budgetSpentPercent = budgetSummary.total > 0 ? (budgetSummary.spent / budgetSummary.total) * 100 : 0;
   const { user } = useUser();
+
+  if (!user?.name1) {
+    return null; // or a loading spinner
+  }
 
   return (
     <div>

@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import * as React from 'react';
@@ -8,7 +9,6 @@ import { useToast } from '@/hooks/use-toast';
 import { UploadCloud, CheckCircle, XCircle, Gem } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 import { Header } from '@/components/header';
-import { useSubscription } from '@/hooks/use-subscription';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface UploadedFile extends File {
@@ -24,7 +24,7 @@ export default function GuestUploadPage() {
   const [existingImageCount, setExistingImageCount] = React.useState(6); // Simulate existing images in album
   
   // In a real app, this would be determined by the couple's subscription status
-  const { isPremium, openDialog } = useSubscription();
+  const isPremium = false; // This will be connected to the user's subscription status later
 
   const onDrop = React.useCallback((acceptedFiles: File[]) => {
     if (!isPremium && (files.length + existingImageCount + acceptedFiles.length) > FREE_TIER_LIMIT) {

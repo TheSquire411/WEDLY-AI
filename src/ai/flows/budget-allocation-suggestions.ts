@@ -1,4 +1,3 @@
-// Budget allocation suggestion flow
 'use server';
 
 /**
@@ -12,10 +11,17 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
+const ExpenseSchema = z.object({
+  category: z.string(),
+  actual: z.number(),
+  vendor: z.string(),
+});
+
 const BudgetAllocationSuggestionsInputSchema = z.object({
-  totalBudget: z
+  remainingBudget: z
     .number()
-    .describe('The total budget for the wedding.'),
+    .describe('The remaining budget for the wedding.'),
+  currentExpenses: z.array(ExpenseSchema).describe('A list of expenses already incurred.'),
   priorityItems: z
     .string()
     .describe('A comma separated list of items the user wants to prioritize for their wedding.'),
@@ -39,10 +45,17 @@ const prompt = ai.definePrompt({
   name: 'budgetAllocationSuggestionsPrompt',
   input: {schema: BudgetAllocationSuggestionsInputSchema},
   output: {schema: BudgetAllocationSuggestionsOutputSchema},
-  prompt: `You are a wedding planning assistant that helps couples allocate their budget.
+  prompt: `You are a wedding planning assistant that helps couples allocate their remaining budget.
 
-  Based on the total budget and priority items from the user, provide estimated budget allocations for the following categories:
+  The user has already spent on some items. Here is a list of their current expenses:
+  {{#each currentExpenses}}
+  - Category: {{category}}, Amount: {{actual}}, Vendor: {{vendor}}
+  {{/each}}
 
+  Their remaining budget is \${{remainingBudget}}.
+  Their priorities are: {{priorityItems}}.
+
+  Based on their remaining budget, current spending, and priorities, provide estimated budget allocations for the following categories. Do not include categories they have already spent on.
   - Venue
   - Catering
   - Photography
@@ -53,9 +66,6 @@ const prompt = ai.definePrompt({
   - Entertainment
   - Stationery
   - Wedding Favors
-
-  Total Budget: ${'{{totalBudget}}'}
-  Priority Items: ${'{{priorityItems}}'}
 
   Return the allocations as a JSON string.
 `,

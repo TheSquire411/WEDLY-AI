@@ -15,8 +15,8 @@ export function DashboardOverview() {
             <Gem className="h-5 w-5 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">$15,750 / $20,000</div>
-            <p className="text-xs text-muted-foreground">78% of budget spent</p>
+            <div className="text-2xl font-bold">$17,750 / $20,000</div>
+            <p className="text-xs text-muted-foreground">88% of budget spent</p>
           </CardContent>
         </Card>
         <Card className="hover:shadow-lg transition-shadow">

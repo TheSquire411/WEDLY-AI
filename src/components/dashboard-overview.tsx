@@ -1,8 +1,6 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, ListChecks, Gem } from "lucide-react";
-import Image from 'next/image';
 import { VowGenerator } from './vow-generator';
-import { VisionBoardGenerator } from './vision-board-generator';
 
 export function DashboardOverview() {
   return (
@@ -43,29 +41,8 @@ export function DashboardOverview() {
         </Card>
       </div>
 
-      <div className="grid gap-8 mt-8 md:grid-cols-5">
-        <div className="md:col-span-3">
-            <Card>
-                <CardHeader>
-                    <CardTitle className="font-headline text-2xl">Vision Board</CardTitle>
-                    <CardDescription>Your wedding inspiration in one place. Use the AI generator or add your own images.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        <VisionBoardGenerator />
-                        <div className="overflow-hidden rounded-lg shadow-md">
-                            <Image src="https://placehold.co/300x400.png" alt="Wedding inspiration 1" data-ai-hint="wedding dress" width={300} height={400} className="object-cover aspect-square hover:scale-105 transition-transform duration-300 ease-in-out" />
-                        </div>
-                        <div className="overflow-hidden rounded-lg shadow-md">
-                            <Image src="https://placehold.co/300x400.png" alt="Wedding inspiration 2" data-ai-hint="wedding venue" width={300} height={400} className="object-cover aspect-square hover:scale-105 transition-transform duration-300 ease-in-out" />
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
-        </div>
-        <div className="md:col-span-2">
-            <VowGenerator />
-        </div>
+      <div className="mt-8">
+        <VowGenerator />
       </div>
     </div>
   );

@@ -8,6 +8,8 @@ import { Input } from '@/components/ui/input';
 import { VisionBoardGenerator } from './vision-board-generator';
 import { Upload, Search } from 'lucide-react';
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
+import { unsplashImageSearch, type UnsplashImage } from '@/ai/flows/unsplash-image-search';
+import { UnsplashSearchDialog } from './unsplash-search-dialog';
 
 interface VisionImage {
     id: string;
@@ -27,6 +29,10 @@ const initialImages: VisionImage[] = [
 export function VisionBoard() {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [images, setImages] = useState<VisionImage[]>(initialImages);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState<UnsplashImage[]>([]);
+  const [isSearchDialogOpen, setIsSearchDialogOpen] = useState(false);
 
   const handleUploadClick = () => {
     fileInputRef.current?.click();
@@ -39,18 +45,50 @@ export function VisionBoard() {
         alt: prompt,
         hint: prompt.split(' ').slice(0, 2).join(' '),
     };
-    setImages(prev => [...prev, newImage]);
+    setImages(prev => [newImage, ...prev]);
+  }
+  
+  const addUnsplashImage = (image: UnsplashImage) => {
+    const newImage: VisionImage = {
+        id: image.id,
+        src: image.urls.regular,
+        alt: image.alt_description,
+        hint: image.alt_description.split(' ').slice(0, 2).join(' '),
+    };
+    setImages(prev => [newImage, ...prev]);
+    setIsSearchDialogOpen(false);
   }
 
   const onDragEnd = (result: DropResult) => {
     const { source, destination } = result;
     if (!destination) return;
+    
+    // Prevent dragging the generator
+    if (source.draggableId === 'generator' && destination.index === 0) return;
+
 
     const reorderedImages = Array.from(images);
-    const [movedImage] = reorderedImages.splice(source.index, 1);
-    reorderedImages.splice(destination.index, 0, movedImage);
+    const [movedImage] = reorderedImages.splice(source.index -1, 1);
+    reorderedImages.splice(destination.index -1, 0, movedImage);
     
     setImages(reorderedImages);
+  }
+  
+  const handleSearch = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!searchQuery.trim()) return;
+      
+      setIsSearching(true);
+      setSearchResults([]);
+      try {
+          const results = await unsplashImageSearch({ query: searchQuery });
+          setSearchResults(results.images);
+          setIsSearchDialogOpen(true);
+      } catch (error) {
+          console.error("Unsplash search error:", error);
+      } finally {
+          setIsSearching(false);
+      }
   }
 
   return (
@@ -66,10 +104,16 @@ export function VisionBoard() {
                     <Upload className="mr-2" />
                     Upload Image
                 </Button>
-                <div className="relative">
+                <form onSubmit={handleSearch} className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                    <Input placeholder="Search Unsplash..." className="pl-10" />
-                </div>
+                    <Input 
+                        placeholder="Search Unsplash..." 
+                        className="pl-10" 
+                        value={searchQuery}
+                        onChange={e => setSearchQuery(e.target.value)}
+                        disabled={isSearching}
+                    />
+                </form>
             </div>
         </div>
         
@@ -81,7 +125,7 @@ export function VisionBoard() {
                         {...provided.droppableProps}
                         className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
                     >
-                        <Draggable key="generator" draggableId="generator" index={0}>
+                        <Draggable key="generator" draggableId="generator" index={0} isDragDisabled>
                             {(provided) => (
                                 <div
                                     ref={provided.innerRef}
@@ -111,6 +155,15 @@ export function VisionBoard() {
                 )}
             </Droppable>
         </DragDropContext>
+        
+        <UnsplashSearchDialog 
+            isOpen={isSearchDialogOpen}
+            onOpenChange={setIsSearchDialogOpen}
+            isLoading={isSearching}
+            images={searchResults}
+            onImageSelect={addUnsplashImage}
+            query={searchQuery}
+        />
     </div>
   );
 }

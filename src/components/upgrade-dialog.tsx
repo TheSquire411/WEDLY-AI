@@ -23,7 +23,15 @@ const proFeatures = [
 ];
 
 export function UpgradeDialog() {
-  const { isDialogOpen, closeDialog, upgrade } = useSubscription();
+  const { isDialogOpen, closeDialog } = useSubscription();
+
+  const handleUpgradeClick = () => {
+    // In a real application, this would trigger the Stripe checkout flow.
+    // 1. Call a backend endpoint to create a Stripe Checkout Session.
+    // 2. Redirect the user to the Stripe checkout URL.
+    console.log("Stripe checkout process would start here.");
+    closeDialog();
+  }
 
   return (
     <Dialog open={isDialogOpen} onOpenChange={closeDialog}>
@@ -49,7 +57,7 @@ export function UpgradeDialog() {
             </ul>
         </div>
         <DialogFooter>
-          <Button onClick={upgrade} className="w-full" size="lg">
+          <Button onClick={handleUpgradeClick} className="w-full" size="lg">
             Upgrade Now for $49
           </Button>
         </DialogFooter>

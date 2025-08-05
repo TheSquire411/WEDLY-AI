@@ -11,7 +11,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.8,
   }));
 
-  const routes = ['', '/blog', '/guest-upload'].map((route) => ({
+  const routes = ['', '/blog', '/guest-upload', '/admin'].map((route) => ({
     url: `${siteUrl}${route}`,
     lastModified: new Date(),
     changeFrequency: 'monthly' as const,

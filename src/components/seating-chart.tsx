@@ -6,8 +6,9 @@ import { seatingChartSuggestions, type SeatingChartSuggestionsOutput } from '@/a
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Wand2, Armchair } from 'lucide-react';
+import { Loader2, Wand2, Armchair, Gem } from 'lucide-react';
 import { Badge } from './ui/badge';
+import { useSubscription } from '@/hooks/use-subscription';
 
 const guests = [
   { name: 'Alice Johnson', group: "Bride's Family" },
@@ -28,8 +29,13 @@ export function SeatingChart() {
   const [seatingChart, setSeatingChart] = React.useState<SeatingChartSuggestionsOutput['seatingChart'] | null>(null);
   const [isLoading, setIsLoading] = React.useState(false);
   const { toast } = useToast();
+  const { isPremium, openDialog } = useSubscription();
 
   const handleGenerateChart = async () => {
+    if (!isPremium) {
+        openDialog();
+        return;
+    }
     setIsLoading(true);
     setSeatingChart(null);
     try {
@@ -61,7 +67,7 @@ export function SeatingChart() {
                 <h2 className="text-4xl font-headline text-gray-800">AI Seating Assistant</h2>
                 <p className="text-muted-foreground">Let AI help you arrange the perfect seating plan.</p>
             </div>
-            <Button onClick={handleGenerateChart} disabled={isLoading} size="lg">
+            <Button onClick={handleGenerateChart} disabled={isLoading || !isPremium} size="lg">
                 {isLoading ? (
                     <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                 ) : (
@@ -71,6 +77,18 @@ export function SeatingChart() {
             </Button>
         </div>
 
+        {!isPremium && (
+            <Card className="text-center py-20 px-6 bg-muted/20 border-dashed border-2 mb-8">
+                <Gem className="mx-auto h-12 w-12 text-primary/50" />
+                <h3 className="mt-4 text-xl font-semibold">Unlock the AI Seating Assistant</h3>
+                <p className="mt-2 text-muted-foreground">Upgrade to our Pro plan to automatically generate seating charts based on your guest list and groups.</p>
+                <Button onClick={openDialog} className="mt-4">
+                    <Gem className="mr-2 h-4 w-4" />
+                    Upgrade to Pro
+                </Button>
+            </Card>
+        )}
+
         {isLoading && (
             <div className="text-center p-8">
                 <Loader2 className="mx-auto h-12 w-12 text-primary animate-spin" />
@@ -78,7 +96,7 @@ export function SeatingChart() {
             </div>
         )}
 
-        {seatingChart ? (
+        {seatingChart && isPremium ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {seatingChart.map((table) => (
                     <Card key={table.table} className="shadow-lg">
@@ -105,7 +123,7 @@ export function SeatingChart() {
                 ))}
             </div>
         ) : (
-            !isLoading && (
+            !isLoading && isPremium && (
                  <Card className="text-center py-20 px-6 bg-muted/20 border-dashed border-2">
                     <Armchair className="mx-auto h-12 w-12 text-muted-foreground" />
                     <h3 className="mt-4 text-xl font-semibold">Ready to create your seating plan?</h3>

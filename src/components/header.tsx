@@ -1,6 +1,7 @@
+
 "use client"
 
-import { Heart } from 'lucide-react';
+import { Heart, Gem } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -11,8 +12,12 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useSubscription } from '@/hooks/use-subscription';
+import { UpgradeDialog } from './upgrade-dialog';
 
 export function Header() {
+  const { isPremium, openDialog } = useSubscription();
+
   return (
     <header className="border-b bg-card shadow-sm">
       <div className="container mx-auto flex h-20 items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -20,30 +25,39 @@ export function Header() {
           <Heart className="text-primary h-8 w-8" />
           <h1 className="text-3xl font-headline font-bold text-foreground">Wedly</h1>
         </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative h-12 w-12 rounded-full">
-              <Avatar className="h-12 w-12 border-2 border-primary/50">
-                <AvatarImage src="https://placehold.co/100x100.png" alt="User avatar" data-ai-hint="woman smiling" />
-                <AvatarFallback>JD</AvatarFallback>
-              </Avatar>
+        <div className="flex items-center gap-4">
+          {!isPremium && (
+            <Button onClick={openDialog}>
+                <Gem className="mr-2 h-4 w-4" />
+                Upgrade
             </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56" align="end" forceMount>
-            <DropdownMenuLabel className="font-normal">
-              <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">Jane Doe</p>
-                <p className="text-xs leading-none text-muted-foreground">jane.doe@example.com</p>
-              </div>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>Profile</DropdownMenuItem>
-            <DropdownMenuItem>Settings</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>Log out</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+          )}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="relative h-12 w-12 rounded-full">
+                <Avatar className="h-12 w-12 border-2 border-primary/50">
+                  <AvatarImage src="https://placehold.co/100x100.png" alt="User avatar" data-ai-hint="woman smiling" />
+                  <AvatarFallback>JD</AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56" align="end" forceMount>
+              <DropdownMenuLabel className="font-normal">
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-medium leading-none">Jane Doe</p>
+                  <p className="text-xs leading-none text-muted-foreground">jane.doe@example.com</p>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>Profile</DropdownMenuItem>
+              <DropdownMenuItem>Settings</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>Log out</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
+      <UpgradeDialog />
     </header>
   );
 }

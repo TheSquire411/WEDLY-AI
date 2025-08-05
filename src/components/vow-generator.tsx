@@ -6,6 +6,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { generateVows } from '@/ai/flows/vow-generator';
+import { useSubscription } from '@/hooks/use-subscription';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,7 +15,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Sparkles, Wand2 } from 'lucide-react';
+import { Loader2, Sparkles, Wand2, Gem } from 'lucide-react';
+import { Badge } from './ui/badge';
 
 const formSchema = z.object({
   partnerName: z.string().min(1, { message: "Partner's name is required." }),
@@ -26,6 +28,7 @@ export function VowGenerator() {
   const [generatedVows, setGeneratedVows] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { isPremium, openDialog } = useSubscription();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -37,6 +40,10 @@ export function VowGenerator() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!isPremium) {
+      openDialog();
+      return;
+    }
     setIsLoading(true);
     setGeneratedVows(null);
     try {
@@ -57,10 +64,13 @@ export function VowGenerator() {
   return (
     <Card className="h-full flex flex-col">
       <CardHeader>
-        <CardTitle className="font-headline text-2xl flex items-center gap-2">
-          <Sparkles className="h-6 w-6 text-primary" />
-          AI Vow Generator
-        </CardTitle>
+        <div className="flex justify-between items-start">
+            <CardTitle className="font-headline text-2xl flex items-center gap-2">
+            <Sparkles className="h-6 w-6 text-primary" />
+            AI Vow Generator
+            </CardTitle>
+            {!isPremium && <Badge variant="outline" className="text-primary border-primary"><Gem className="mr-1 h-3 w-3" /> Upgrade to Pro</Badge>}
+        </div>
         <CardDescription>
           Struggling to find the right words? Let our AI help you craft the perfect vows.
         </CardDescription>
@@ -76,7 +86,7 @@ export function VowGenerator() {
                   <FormItem>
                     <FormLabel>Partner's Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g. Alex" {...field} />
+                      <Input placeholder="e.g. Alex" {...field} disabled={!isPremium} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -88,7 +98,7 @@ export function VowGenerator() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Desired Tone</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} defaultValue={field.value} disabled={!isPremium}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select a tone" />
@@ -113,13 +123,13 @@ export function VowGenerator() {
                 <FormItem>
                   <FormLabel>Share some key memories</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="e.g. Our first date, a special trip, an inside joke..." {...field} rows={3}/>
+                    <Textarea placeholder="e.g. Our first date, a special trip, an inside joke..." {...field} rows={3} disabled={!isPremium} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <Button type="submit" disabled={isLoading} className="w-full">
+            <Button type="submit" disabled={isLoading || !isPremium} className="w-full">
               {isLoading ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (

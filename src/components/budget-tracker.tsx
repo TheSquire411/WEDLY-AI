@@ -24,10 +24,11 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Wand2, PlusCircle, Bell, CheckCircle2 } from 'lucide-react';
+import { Loader2, Wand2, PlusCircle, Bell, CheckCircle2, Gem } from 'lucide-react';
 import { BudgetPieChart, type BudgetItem } from './budget-pie-chart';
 import { Badge } from './ui/badge';
 import { format } from 'date-fns';
+import { useSubscription } from '@/hooks/use-subscription';
 
 const initialExpenses = [
   { category: 'Venue', estimated: 5000, actual: 5500, vendor: 'Sunshine Meadows', dueDate: new Date('2024-10-01'), paid: true, reminder: false },
@@ -44,6 +45,7 @@ export function BudgetTracker() {
   const [totalBudget, setTotalBudget] = useState(20000);
   const [expenses, setExpenses] = useState(initialExpenses);
   const { toast } = useToast();
+  const { isPremium, openDialog } = useSubscription();
 
   const totalSpent = useMemo(() => {
     return expenses.filter(e => e.paid).reduce((sum, expense) => sum + expense.actual, 0);
@@ -53,6 +55,10 @@ export function BudgetTracker() {
   const spentPercentage = useMemo(() => (totalSpent / totalBudget) * 100, [totalBudget, totalSpent]);
 
   async function getSuggestions() {
+    if (!isPremium) {
+      openDialog();
+      return;
+    }
     setIsLoading(true);
     setSuggestions(null);
     try {
@@ -192,17 +198,20 @@ export function BudgetTracker() {
         <div className="md:col-span-2">
           <Card>
             <CardHeader>
-              <CardTitle className="font-headline text-2xl flex items-center gap-2">
-                <Wand2 className="h-6 w-6 text-primary" />
-                AI Budget Assistant
-              </CardTitle>
+              <div className="flex justify-between items-start">
+                  <CardTitle className="font-headline text-2xl flex items-center gap-2">
+                    <Wand2 className="h-6 w-6 text-primary" />
+                    AI Budget Assistant
+                  </CardTitle>
+                  {!isPremium && <Badge variant="outline" className="text-primary border-primary"><Gem className="mr-1 h-3 w-3" /> Upgrade to Pro</Badge>}
+              </div>
               <CardDescription>
                 Get AI suggestions for your remaining budget.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
                <p className="text-sm text-muted-foreground">Based on your spending so far, let our AI help you plan how to best use your remaining <span className="font-bold text-foreground">${remainingBudget.toLocaleString()}</span>.</p>
-               <Button onClick={getSuggestions} disabled={isLoading} className="w-full">
+               <Button onClick={getSuggestions} disabled={isLoading || !isPremium} className="w-full">
                 {isLoading ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (

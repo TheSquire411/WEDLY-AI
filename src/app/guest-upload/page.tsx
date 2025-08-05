@@ -17,6 +17,8 @@ interface UploadedFile extends File {
 }
 
 const FREE_TIER_LIMIT = 10;
+const MAX_FILE_SIZE_MB = 5;
+const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 
 export default function GuestUploadPage() {
   const { toast } = useToast();
@@ -25,7 +27,17 @@ export default function GuestUploadPage() {
   const { isPremium } = useSubscription();
   const { photos, addPhoto } = usePhotos();
 
-  const onDrop = React.useCallback((acceptedFiles: File[]) => {
+  const onDrop = React.useCallback((acceptedFiles: File[], rejectedFiles: any[]) => {
+    if (rejectedFiles.length > 0) {
+      rejectedFiles.forEach(({ file }) => {
+        toast({
+            variant: 'destructive',
+            title: 'File Too Large',
+            description: `"${file.name}" is larger than the ${MAX_FILE_SIZE_MB}MB limit.`,
+        });
+      });
+    }
+
     if (!isPremium && (files.length + photos.length + acceptedFiles.length) > FREE_TIER_LIMIT) {
         toast({
             variant: 'destructive',
@@ -46,7 +58,8 @@ export default function GuestUploadPage() {
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: { 'image/*': [] },
-    disabled: limitReached
+    disabled: limitReached,
+    maxSize: MAX_FILE_SIZE_BYTES,
   });
 
   const removeFile = (fileName: string) => {
@@ -125,17 +138,20 @@ export default function GuestUploadPage() {
                     </AlertDescription>
                 </Alert>
             )}
-            <div
-              {...getRootProps()}
-              className={`p-10 border-2 border-dashed rounded-lg text-center transition-colors ${
-                isDragActive ? 'border-primary bg-primary/10' : 'border-border'
-              } ${limitReached ? 'cursor-not-allowed bg-muted/50' : 'cursor-pointer hover:border-primary/50'}`}
-            >
-              <input {...getInputProps()} />
-              <UploadCloud className="mx-auto h-12 w-12 text-muted-foreground" />
-              <p className="mt-4">
-                {isDragActive ? 'Drop the files here...' : 'Drag & drop photos here, or click to select files'}
-              </p>
+            <div>
+              <div
+                {...getRootProps()}
+                className={`p-10 border-2 border-dashed rounded-lg text-center transition-colors ${
+                  isDragActive ? 'border-primary bg-primary/10' : 'border-border'
+                } ${limitReached ? 'cursor-not-allowed bg-muted/50' : 'cursor-pointer hover:border-primary/50'}`}
+              >
+                <input {...getInputProps()} />
+                <UploadCloud className="mx-auto h-12 w-12 text-muted-foreground" />
+                <p className="mt-4">
+                  {isDragActive ? 'Drop the files here...' : 'Drag & drop photos here, or click to select files'}
+                </p>
+              </div>
+              <p className="text-xs text-muted-foreground text-center mt-2">Maximum file size: {MAX_FILE_SIZE_MB}MB.</p>
             </div>
             
             {files.length > 0 && (

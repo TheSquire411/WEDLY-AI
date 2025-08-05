@@ -52,8 +52,8 @@ export function VisionBoard() {
     const newImage: VisionImage = {
         id: image.id,
         src: image.urls.regular,
-        alt: image.alt_description,
-        hint: image.alt_description.split(' ').slice(0, 2).join(' '),
+        alt: image.alt_description || "Unsplash image",
+        hint: image.alt_description?.split(' ').slice(0, 2).join(' ') || "wedding",
     };
     setImages(prev => [newImage, ...prev]);
     setIsSearchDialogOpen(false);
@@ -125,7 +125,7 @@ export function VisionBoard() {
                         {...provided.droppableProps}
                         className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
                     >
-                        <Draggable key="generator" draggableId="generator" index={0} isDragDisabled>
+                        <Draggable key="generator" draggableId="generator" index={0} isDragDisabled={true}>
                             {(provided) => (
                                 <div
                                     ref={provided.innerRef}

@@ -42,31 +42,39 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-            if (firebaseUser) {
-                const userDocRef = doc(db, 'users', firebaseUser.uid);
-                const userDoc = await getDoc(userDocRef);
-                
-                if (userDoc.exists()) {
-                     setUser({ ...userDoc.data(), uid: firebaseUser.uid, email: firebaseUser.email } as UserData);
-                } else {
-                    // This happens with social sign-ins for the first time
-                    const displayName = firebaseUser.displayName || "Jane,John";
-                    const [name1, name2] = displayName.includes(',') ? displayName.split(',') : [displayName, 'Partner'];
+            try {
+                if (firebaseUser) {
+                    const userDocRef = doc(db, 'users', firebaseUser.uid);
+                    const userDoc = await getDoc(userDocRef);
+                    
+                    if (userDoc.exists()) {
+                        setUser({ ...userDoc.data(), uid: firebaseUser.uid, email: firebaseUser.email } as UserData);
+                    } else {
+                        // This block runs for first-time Google sign-ins
+                        const displayName = firebaseUser.displayName || "Jane,John";
+                        const [name1, name2] = displayName.includes(',') ? displayName.split(',') : [displayName, 'Partner'];
 
-                    const newUser: UserData = {
-                        uid: firebaseUser.uid,
-                        email: firebaseUser.email,
-                        name1,
-                        name2,
-                        photoURL: firebaseUser.photoURL,
+                        const newUser: UserData = {
+                            uid: firebaseUser.uid,
+                            email: firebaseUser.email,
+                            name1,
+                            name2,
+                            photoURL: firebaseUser.photoURL,
+                        }
+                        await setDoc(userDocRef, newUser);
+                        setUser(newUser);
                     }
-                    await setDoc(userDocRef, newUser);
-                    setUser(newUser);
+                } else {
+                    setUser(null);
                 }
-            } else {
+            } catch (error) {
+                console.error("Error during auth state change: ", error);
+                // If there's an error, we should still ensure the user is not considered logged in
                 setUser(null);
+            } finally {
+                // This will run regardless of whether there was an error or not
+                setLoading(false);
             }
-            setLoading(false);
         });
 
         return () => unsubscribe();

@@ -1,8 +1,12 @@
+
+"use client";
+
+import * as React from 'react';
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 
-const tasks = [
+const initialTasks = [
   { id: '1', title: 'Set a date and book venue', dueDate: '12 months out', completed: true },
   { id: '2', title: 'Finalize guest list', dueDate: '10 months out', completed: true },
   { id: '3', title: 'Book photographer and videographer', dueDate: '9 months out', completed: true },
@@ -17,6 +21,16 @@ const tasks = [
 ];
 
 export function TaskManager() {
+  const [tasks, setTasks] = React.useState(initialTasks);
+
+  const handleTaskToggle = (taskId: string) => {
+    setTasks(currentTasks =>
+      currentTasks.map(task =>
+        task.id === taskId ? { ...task, completed: !task.completed } : task
+      )
+    );
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -27,7 +41,12 @@ export function TaskManager() {
         <div className="space-y-4">
           {tasks.map((task) => (
             <div key={task.id} className="flex items-center space-x-4 p-3 rounded-lg hover:bg-primary/5 transition-colors">
-              <Checkbox id={`task-${task.id}`} checked={task.completed} aria-label={`Mark "${task.title}" as complete`} />
+              <Checkbox
+                id={`task-${task.id}`}
+                checked={task.completed}
+                onCheckedChange={() => handleTaskToggle(task.id)}
+                aria-label={`Mark "${task.title}" as complete`}
+              />
               <div className="flex-1">
                 <label
                   htmlFor={`task-${task.id}`}

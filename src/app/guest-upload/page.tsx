@@ -41,10 +41,12 @@ export default function GuestUploadPage() {
     setFiles(prev => [...prev, ...newFiles]);
   }, [files.length, isPremium, photos.length, toast]);
 
+  const limitReached = !isPremium && photos.length >= FREE_TIER_LIMIT;
+
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: { 'image/*': [] },
-    disabled: !isPremium && (photos.length) >= FREE_TIER_LIMIT
+    disabled: limitReached
   });
 
   const removeFile = (fileName: string) => {
@@ -104,9 +106,6 @@ export default function GuestUploadPage() {
     }
   };
   
-  const limitReached = !isPremium && (photos.length) >= FREE_TIER_LIMIT;
-
-
   return (
     <div className="flex flex-col bg-background">
       <Header />

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo } from 'react';
@@ -23,15 +24,18 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Wand2, PlusCircle, Pen } from 'lucide-react';
+import { Loader2, Wand2, PlusCircle, Bell, CheckCircle2 } from 'lucide-react';
 import { BudgetPieChart, type BudgetItem } from './budget-pie-chart';
+import { Badge } from './ui/badge';
+import { format } from 'date-fns';
 
 const initialExpenses = [
-  { category: 'Venue', estimated: 5000, actual: 5500, vendor: 'Sunshine Meadows' },
-  { category: 'Catering', estimated: 6000, actual: 5800, vendor: 'Gourmet Delights' },
-  { category: 'Photography', estimated: 2500, actual: 2500, vendor: 'Timeless Snaps' },
-  { category: 'Flowers', estimated: 1500, actual: 1200, vendor: 'Blooming Creations' },
-  { category: 'Attire', estimated: 2000, actual: 2750, vendor: 'Elegant Gowns' },
+  { category: 'Venue', estimated: 5000, actual: 5500, vendor: 'Sunshine Meadows', dueDate: new Date('2024-10-01'), paid: true, reminder: false },
+  { category: 'Catering', estimated: 6000, actual: 5800, vendor: 'Gourmet Delights', dueDate: new Date('2024-10-15'), paid: true, reminder: false },
+  { category: 'Photography', estimated: 2500, actual: 2500, vendor: 'Timeless Snaps', dueDate: new Date('2024-09-20'), paid: true, reminder: true },
+  { category: 'Flowers', estimated: 1500, actual: 1200, vendor: 'Blooming Creations', dueDate: new Date('2024-11-01'), paid: false, reminder: false },
+  { category: 'Attire', estimated: 2000, actual: 2750, vendor: 'Elegant Gowns', dueDate: new Date('2024-08-30'), paid: true, reminder: false },
+  { category: 'Entertainment', estimated: 3000, actual: 3000, vendor: 'Groove Band', dueDate: new Date('2024-11-10'), paid: false, reminder: true },
 ];
 
 export function BudgetTracker() {
@@ -42,7 +46,7 @@ export function BudgetTracker() {
   const { toast } = useToast();
 
   const totalSpent = useMemo(() => {
-    return expenses.reduce((sum, expense) => sum + expense.actual, 0);
+    return expenses.filter(e => e.paid).reduce((sum, expense) => sum + expense.actual, 0);
   }, [expenses]);
 
   const remainingBudget = useMemo(() => totalBudget - totalSpent, [totalBudget, totalSpent]);
@@ -55,7 +59,7 @@ export function BudgetTracker() {
       const result = await budgetAllocationSuggestions({
         remainingBudget: remainingBudget,
         currentExpenses: expenses.map(e => ({ category: e.category, actual: e.actual, vendor: e.vendor })),
-        priorityItems: 'Photography, good food, and an open bar', // This could be made dynamic
+        priorityItems: 'Photography, good food, and an open bar',
       });
       const parsedSuggestions = JSON.parse(result.suggestedAllocations);
       const chartData = Object.entries(parsedSuggestions).map(([name, value]) => ({
@@ -74,6 +78,20 @@ export function BudgetTracker() {
       setIsLoading(false);
     }
   }
+
+  const togglePaidStatus = (category: string) => {
+    setExpenses(prev =>
+      prev.map(e =>
+        e.category === category ? { ...e, paid: !e.paid } : e
+      )
+    );
+  };
+  
+  const toggleReminder = (category: string) => {
+    setExpenses(prev =>
+        prev.map(e => (e.category === category ? { ...e, reminder: !e.reminder } : e))
+    );
+  };
 
   return (
     <div className="space-y-8">
@@ -130,18 +148,40 @@ export function BudgetTracker() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Category</TableHead>
-                    <TableHead>Vendor</TableHead>
-                    <TableHead>Estimated</TableHead>
-                    <TableHead className="text-right">Actual</TableHead>
+                    <TableHead>Actual</TableHead>
+                    <TableHead>Due Date</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {expenses.map((expense) => (
-                    <TableRow key={expense.category}>
-                      <TableCell className="font-medium">{expense.category}</TableCell>
-                      <TableCell className="text-muted-foreground">{expense.vendor}</TableCell>
-                      <TableCell>${expense.estimated.toLocaleString()}</TableCell>
-                      <TableCell className="text-right">${expense.actual.toLocaleString()}</TableCell>
+                    <TableRow key={expense.category} className={`${expense.paid ? 'bg-green-50/50' : ''}`}>
+                      <TableCell className="font-medium">{expense.category}<br/><span className="text-xs text-muted-foreground">{expense.vendor}</span></TableCell>
+                      <TableCell>${expense.actual.toLocaleString()}</TableCell>
+                      <TableCell>{format(expense.dueDate, 'MMM d, yyyy')}</TableCell>
+                       <TableCell>
+                        <Badge variant={expense.paid ? 'secondary' : 'outline'}>{expense.paid ? 'Paid' : 'Due'}</Badge>
+                      </TableCell>
+                      <TableCell className="text-right flex items-center justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => toggleReminder(expense.category)}
+                          className={expense.reminder ? 'text-primary' : 'text-muted-foreground'}
+                        >
+                          <Bell className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => togglePaidStatus(expense.category)}
+                          disabled={expense.paid}
+                        >
+                          <CheckCircle2 className="mr-2 h-4 w-4"/>
+                          {expense.paid ? 'Paid' : 'Mark Paid'}
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

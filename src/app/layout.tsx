@@ -3,10 +3,15 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { SubscriptionProvider } from '@/hooks/use-subscription';
 import { UserProvider } from '@/hooks/use-user';
+import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: 'Wedly Minimal',
-  description: 'A modern, feature-rich wedding planning web app.',
+  title: {
+    default: 'Wedly - Your AI-Powered Wedding Planning Assistant',
+    template: '%s | Wedly',
+  },
+  description: 'Wedly is a modern, feature-rich web app that uses AI to simplify your wedding planning. From budget tracking and guest lists to AI vow generation and vision boards, Wedly has everything you need to plan your perfect day.',
+  keywords: ['wedding planner', 'ai wedding planner', 'wedding budget', 'guest list manager', 'vow generator', 'wedding checklist', 'seating chart maker'],
 };
 
 export default function RootLayout({
@@ -22,11 +27,19 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet" />
         <link href="https://fonts.googleapis.com/css2?family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet" />
       </head>
-      <body className="font-body antialiased">
+      <body className="font-body antialiased flex flex-col min-h-screen">
         <UserProvider>
           <SubscriptionProvider>
-              {children}
+              <div className="flex-grow">
+                {children}
+              </div>
               <Toaster />
+              <footer className="text-center p-4 text-muted-foreground text-sm border-t">
+                <div className="container mx-auto flex justify-between items-center">
+                  <p>Wedly &copy; {new Date().getFullYear()}</p>
+                  <Link href="/blog" className="hover:text-primary transition-colors">Blog</Link>
+                </div>
+              </footer>
           </SubscriptionProvider>
         </UserProvider>
       </body>

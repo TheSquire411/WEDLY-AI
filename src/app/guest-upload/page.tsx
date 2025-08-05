@@ -81,7 +81,7 @@ export default function GuestUploadPage() {
 
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex flex-col bg-background">
       <Header />
       <main className="flex-grow container mx-auto p-4 sm:p-6 lg:p-8 flex items-center justify-center">
         <Card className="w-full max-w-2xl shadow-xl">
@@ -134,9 +134,6 @@ export default function GuestUploadPage() {
           </CardContent>
         </Card>
       </main>
-      <footer className="text-center p-4 text-muted-foreground text-sm">
-        <p>Wedly &copy; {new Date().getFullYear()}</p>
-      </footer>
     </div>
   );
 }

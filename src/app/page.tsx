@@ -8,9 +8,6 @@ export default function Home() {
       <main className="flex-grow container mx-auto p-4 sm:p-6 lg:p-8">
         <AppTabs />
       </main>
-      <footer className="text-center p-4 text-muted-foreground text-sm">
-        <p>Wedly &copy; {new Date().getFullYear()}</p>
-      </footer>
     </div>
   );
 }

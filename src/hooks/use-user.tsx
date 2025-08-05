@@ -43,22 +43,25 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
             if (firebaseUser) {
-                const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+                const userDocRef = doc(db, 'users', firebaseUser.uid);
+                const userDoc = await getDoc(userDocRef);
+                
                 if (userDoc.exists()) {
                      setUser({ ...userDoc.data(), email: firebaseUser.email } as UserData);
                 } else {
-                    // Handle case where user exists in Auth but not Firestore
-                    // This can happen with social sign-ins for the first time
-                    const [name1, name2] = (firebaseUser.displayName || "User 1,User 2").split(',');
-                    const newUser = {
+                    // This happens with social sign-ins for the first time
+                    const displayName = firebaseUser.displayName || "Jane,John";
+                    const [name1, name2] = displayName.includes(',') ? displayName.split(',') : [displayName, 'Partner'];
+
+                    const newUser: UserData = {
                         uid: firebaseUser.uid,
                         email: firebaseUser.email,
                         name1,
                         name2,
                         photoURL: firebaseUser.photoURL,
                     }
-                    await setDoc(doc(db, 'users', firebaseUser.uid), newUser);
-                    setUser(newUser as UserData);
+                    await setDoc(userDocRef, newUser);
+                    setUser(newUser);
                 }
             } else {
                 setUser(null);
@@ -86,10 +89,11 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
             uid: firebaseUser.uid,
             email,
             name1,
-            name2
+            name2,
+            photoURL: firebaseUser.photoURL,
         };
         await setDoc(doc(db, "users", firebaseUser.uid), userData);
-        setUser(userData);
+        setUser(userData as UserData);
         return userCredential;
     };
     

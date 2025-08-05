@@ -6,10 +6,12 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Upload, Link as LinkIcon, Download, Copy } from 'lucide-react';
+import { Upload, Link as LinkIcon, Download, Copy, Gem } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useSubscription } from '@/hooks/use-subscription';
+import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 
-const uploadedImages = [
+const initialImages = [
   { src: "https://placehold.co/600x400.png", alt: "Guest photo 1", hint: "wedding guests" },
   { src: "https://placehold.co/400x600.png", alt: "Guest photo 2", hint: "bride groom" },
   { src: "https://placehold.co/600x400.png", alt: "Guest photo 3", hint: "wedding dance" },
@@ -18,10 +20,16 @@ const uploadedImages = [
   { src: "https://placehold.co/600x400.png", alt: "Guest photo 6", hint: "newlyweds kissing" },
 ];
 
+const FREE_TIER_LIMIT = 10;
+
 export function PhotoAlbum() {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const [guestUploadLink, setGuestUploadLink] = React.useState('');
+  const [uploadedImages, setUploadedImages] = React.useState(initialImages);
+  const { isPremium, openDialog } = useSubscription();
+
+  const limitReached = !isPremium && uploadedImages.length >= FREE_TIER_LIMIT;
 
   React.useEffect(() => {
     // Generate a unique link when the component mounts
@@ -29,6 +37,10 @@ export function PhotoAlbum() {
   }, []);
 
   const handleUploadClick = () => {
+    if (limitReached) {
+        openDialog();
+        return;
+    }
     fileInputRef.current?.click();
   };
 
@@ -66,12 +78,12 @@ export function PhotoAlbum() {
 
         <div className="flex flex-col sm:flex-row gap-4 justify-between items-start mb-8">
             <div>
-                <h2 className="text-4xl font-headline text-gray-800">Wedding Photos</h2>
+                <h2 className="text-4xl font-headline text-gray-800">Wedding Photos ({uploadedImages.length})</h2>
                 <p className="text-muted-foreground">A collection of memories from your special day.</p>
             </div>
              <div className="flex gap-2">
                 <Input type="file" ref={fileInputRef} className="hidden" accept="image/*" multiple />
-                <Button variant="outline" onClick={handleUploadClick}>
+                <Button variant="outline" onClick={handleUploadClick} disabled={limitReached}>
                     <Upload className="mr-2" />
                     Upload Your Photos
                 </Button>
@@ -81,6 +93,17 @@ export function PhotoAlbum() {
                 </Button>
             </div>
         </div>
+
+        {limitReached && (
+            <Alert className="mb-8">
+                <Gem className="h-4 w-4" />
+                <AlertTitle>You've reached your photo limit!</AlertTitle>
+                <AlertDescription>
+                   Upgrade to the Pro plan to upload unlimited photos.
+                   <Button variant="link" onClick={openDialog} className="p-1 h-auto">Upgrade now.</Button>
+                </AlertDescription>
+            </Alert>
+        )}
 
         <div className="columns-2 sm:columns-3 md:columns-4 lg:columns-5 gap-4 space-y-4">
             {uploadedImages.map((image, index) => (

@@ -5,29 +5,47 @@ import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { UploadCloud, CheckCircle, FileImage, XCircle } from 'lucide-react';
+import { UploadCloud, CheckCircle, XCircle, Gem } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 import { Header } from '@/components/header';
+import { useSubscription } from '@/hooks/use-subscription';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface UploadedFile extends File {
   preview: string;
 }
 
+const FREE_TIER_LIMIT = 10;
+
 export default function GuestUploadPage() {
   const { toast } = useToast();
   const [files, setFiles] = React.useState<UploadedFile[]>([]);
   const [isUploading, setIsUploading] = React.useState(false);
+  const [existingImageCount, setExistingImageCount] = React.useState(6); // Simulate existing images in album
+  
+  // In a real app, this would be determined by the couple's subscription status
+  const { isPremium, openDialog } = useSubscription();
 
   const onDrop = React.useCallback((acceptedFiles: File[]) => {
+    if (!isPremium && (files.length + existingImageCount + acceptedFiles.length) > FREE_TIER_LIMIT) {
+        toast({
+            variant: 'destructive',
+            title: 'Upload Limit Reached',
+            description: `The free plan is limited to ${FREE_TIER_LIMIT} photos. The couple can upgrade for unlimited uploads.`,
+        });
+        return;
+    }
+
     const newFiles = acceptedFiles.map(file => Object.assign(file, {
         preview: URL.createObjectURL(file)
     }));
     setFiles(prev => [...prev, ...newFiles]);
-  }, []);
+  }, [files, isPremium, existingImageCount, toast]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: { 'image/*': [] },
+    disabled: !isPremium && (files.length + existingImageCount) >= FREE_TIER_LIMIT
   });
 
   const removeFile = (fileName: string) => {
@@ -45,6 +63,7 @@ export default function GuestUploadPage() {
     // Simulate upload process
     setTimeout(() => {
         setIsUploading(false);
+        setExistingImageCount(prev => prev + files.length);
         setFiles([]);
         toast({
             title: "Upload Successful!",
@@ -57,6 +76,8 @@ export default function GuestUploadPage() {
         });
     }, 2000);
   };
+  
+  const limitReached = !isPremium && (files.length + existingImageCount) >= FREE_TIER_LIMIT;
 
 
   return (
@@ -69,11 +90,20 @@ export default function GuestUploadPage() {
             <CardDescription className="text-center">Upload your photos from Jane & John's wedding!</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
+            {limitReached && (
+                <Alert variant="destructive">
+                    <Gem className="h-4 w-4" />
+                    <AlertTitle>Photo Limit Reached</AlertTitle>
+                    <AlertDescription>
+                        This wedding's photo album has reached the limit for the free plan. The couple can upgrade to allow for more photo uploads.
+                    </AlertDescription>
+                </Alert>
+            )}
             <div
               {...getRootProps()}
-              className={`p-10 border-2 border-dashed rounded-lg text-center cursor-pointer transition-colors ${
-                isDragActive ? 'border-primary bg-primary/10' : 'border-border hover:border-primary/50'
-              }`}
+              className={`p-10 border-2 border-dashed rounded-lg text-center transition-colors ${
+                isDragActive ? 'border-primary bg-primary/10' : 'border-border'
+              } ${limitReached ? 'cursor-not-allowed bg-muted/50' : 'cursor-pointer hover:border-primary/50'}`}
             >
               <input {...getInputProps()} />
               <UploadCloud className="mx-auto h-12 w-12 text-muted-foreground" />
@@ -84,7 +114,7 @@ export default function GuestUploadPage() {
             
             {files.length > 0 && (
               <div className="space-y-4">
-                <h3 className="font-medium">Selected Photos:</h3>
+                <h3 className="font-medium">Selected Photos ({files.length}):</h3>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                   {files.map(file => (
                     <div key={file.name} className="relative group">
@@ -95,7 +125,7 @@ export default function GuestUploadPage() {
                     </div>
                   ))}
                 </div>
-                <Button onClick={handleUpload} disabled={isUploading} className="w-full">
+                <Button onClick={handleUpload} disabled={isUploading || limitReached} className="w-full">
                   {isUploading ? "Uploading..." : `Upload ${files.length} Photo(s)`}
                 </Button>
               </div>

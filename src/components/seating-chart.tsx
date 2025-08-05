@@ -33,9 +33,12 @@ export function SeatingChart() {
     setIsLoading(true);
     setSeatingChart(null);
     try {
+      const uniqueGroups = [...new Set(guests.map(g => g.group))];
+      const tableCount = uniqueGroups.length;
+
       const result = await seatingChartSuggestions({
         guests: guests.map(g => ({ name: g.name, group: g.group })),
-        tables: 2,
+        tables: tableCount,
         guestsPerTable: 6,
       });
       setSeatingChart(result.seatingChart);

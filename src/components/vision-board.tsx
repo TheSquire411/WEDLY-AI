@@ -121,7 +121,7 @@ export function VisionBoard() {
         </div>
         
         <DragDropContext onDragEnd={onDragEnd}>
-            <Droppable droppableId="vision-board-grid" direction="horizontal" isDropDisabled={false} isCombineEnabled={false}>
+            <Droppable droppableId="vision-board-grid" direction="horizontal" isDropDisabled={false} isCombineEnabled={false} ignoreContainerClipping={false}>
                 {(provided) => (
                     <div 
                         ref={provided.innerRef}

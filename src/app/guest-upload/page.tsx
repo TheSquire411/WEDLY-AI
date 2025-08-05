@@ -10,6 +10,8 @@ import { UploadCloud, CheckCircle, XCircle, Gem } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 import { Header } from '@/components/header';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useSubscription } from '@/hooks/use-subscription';
+import { usePhotos } from '@/hooks/use-photos';
 
 interface UploadedFile extends File {
   preview: string;
@@ -21,13 +23,11 @@ export default function GuestUploadPage() {
   const { toast } = useToast();
   const [files, setFiles] = React.useState<UploadedFile[]>([]);
   const [isUploading, setIsUploading] = React.useState(false);
-  const [existingImageCount, setExistingImageCount] = React.useState(6); // Simulate existing images in album
-  
-  // In a real app, this would be determined by the couple's subscription status
-  const isPremium = false; // This will be connected to the user's subscription status later
+  const { isPremium } = useSubscription();
+  const { photos, addPhoto } = usePhotos();
 
   const onDrop = React.useCallback((acceptedFiles: File[]) => {
-    if (!isPremium && (files.length + existingImageCount + acceptedFiles.length) > FREE_TIER_LIMIT) {
+    if (!isPremium && (files.length + photos.length + acceptedFiles.length) > FREE_TIER_LIMIT) {
         toast({
             variant: 'destructive',
             title: 'Upload Limit Reached',
@@ -40,12 +40,12 @@ export default function GuestUploadPage() {
         preview: URL.createObjectURL(file)
     }));
     setFiles(prev => [...prev, ...newFiles]);
-  }, [files, isPremium, existingImageCount, toast]);
+  }, [files, isPremium, photos, toast]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: { 'image/*': [] },
-    disabled: !isPremium && (files.length + existingImageCount) >= FREE_TIER_LIMIT
+    disabled: !isPremium && (files.length + photos.length) >= FREE_TIER_LIMIT
   });
 
   const removeFile = (fileName: string) => {
@@ -60,10 +60,16 @@ export default function GuestUploadPage() {
     setIsUploading(true);
     toast({ title: "Uploading...", description: `Uploading ${files.length} photos.` });
     
-    // Simulate upload process
     setTimeout(() => {
+        files.forEach(file => {
+            addPhoto({
+                src: file.preview,
+                alt: file.name,
+                hint: 'guest upload'
+            });
+        });
+
         setIsUploading(false);
-        setExistingImageCount(prev => prev + files.length);
         setFiles([]);
         toast({
             title: "Upload Successful!",
@@ -74,10 +80,10 @@ export default function GuestUploadPage() {
                 </div>
             ),
         });
-    }, 2000);
+    }, 1000);
   };
   
-  const limitReached = !isPremium && (files.length + existingImageCount) >= FREE_TIER_LIMIT;
+  const limitReached = !isPremium && (files.length + photos.length) >= FREE_TIER_LIMIT;
 
 
   return (
@@ -87,7 +93,7 @@ export default function GuestUploadPage() {
         <Card className="w-full max-w-2xl shadow-xl">
           <CardHeader>
             <CardTitle className="text-center font-headline text-3xl">Share Your Photos</CardTitle>
-            <CardDescription className="text-center">Upload your photos from Jane & John's wedding!</CardDescription>
+            <CardDescription className="text-center">Upload your photos from the wedding!</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             {limitReached && (

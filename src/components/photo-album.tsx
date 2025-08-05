@@ -10,15 +10,7 @@ import { Upload, Link as LinkIcon, Download, Copy, Gem } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useSubscription } from '@/hooks/use-subscription';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
-
-const initialImages = [
-  { src: "https://placehold.co/600x400.png", alt: "Guest photo 1", hint: "wedding guests" },
-  { src: "https://placehold.co/400x600.png", alt: "Guest photo 2", hint: "bride groom" },
-  { src: "https://placehold.co/600x400.png", alt: "Guest photo 3", hint: "wedding dance" },
-  { src: "https://placehold.co/600x400.png", alt: "Guest photo 4", hint: "wedding toast" },
-  { src: "https://placehold.co/400x600.png", alt: "Guest photo 5", hint: "wedding cake" },
-  { src: "https://placehold.co/600x400.png", alt: "Guest photo 6", hint: "newlyweds kissing" },
-];
+import { usePhotos } from '@/hooks/use-photos';
 
 const FREE_TIER_LIMIT = 10;
 
@@ -26,10 +18,10 @@ export function PhotoAlbum() {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const [guestUploadLink, setGuestUploadLink] = React.useState('');
-  const [uploadedImages, setUploadedImages] = React.useState(initialImages);
   const { isPremium, openDialog } = useSubscription();
+  const { photos, addPhoto } = usePhotos();
 
-  const limitReached = !isPremium && uploadedImages.length >= FREE_TIER_LIMIT;
+  const limitReached = !isPremium && photos.length >= FREE_TIER_LIMIT;
 
   React.useEffect(() => {
     // Generate a unique link when the component mounts
@@ -42,6 +34,34 @@ export function PhotoAlbum() {
         return;
     }
     fileInputRef.current?.click();
+  };
+  
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files) {
+        if (!isPremium && (photos.length + files.length) > FREE_TIER_LIMIT) {
+             toast({
+                variant: 'destructive',
+                title: 'Upload Limit Reached',
+                description: `The free plan is limited to ${FREE_TIER_LIMIT} photos. You can upgrade for unlimited uploads.`,
+            });
+            return;
+        }
+
+        Array.from(files).forEach(file => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                if (e.target?.result) {
+                     addPhoto({
+                        src: e.target.result as string,
+                        alt: file.name,
+                        hint: 'user upload'
+                    });
+                }
+            };
+            reader.readAsDataURL(file);
+        });
+    }
   };
 
   const copyToClipboard = () => {
@@ -78,11 +98,11 @@ export function PhotoAlbum() {
 
         <div className="flex flex-col sm:flex-row gap-4 justify-between items-start mb-8">
             <div>
-                <h2 className="text-4xl font-headline text-gray-800">Wedding Photos ({uploadedImages.length})</h2>
+                <h2 className="text-4xl font-headline text-gray-800">Wedding Photos ({photos.length})</h2>
                 <p className="text-muted-foreground">A collection of memories from your special day.</p>
             </div>
              <div className="flex gap-2">
-                <Input type="file" ref={fileInputRef} className="hidden" accept="image/*" multiple />
+                <Input type="file" ref={fileInputRef} className="hidden" accept="image/*" multiple onChange={handleFileChange} />
                 <Button variant="outline" onClick={handleUploadClick} disabled={limitReached}>
                     <Upload className="mr-2" />
                     Upload Your Photos
@@ -106,7 +126,7 @@ export function PhotoAlbum() {
         )}
 
         <div className="columns-2 sm:columns-3 md:columns-4 lg:columns-5 gap-4 space-y-4">
-            {uploadedImages.map((image, index) => (
+            {photos.map((image, index) => (
                 <div key={index} className="overflow-hidden rounded-lg shadow-md break-inside-avoid">
                     <Image 
                         src={image.src} 

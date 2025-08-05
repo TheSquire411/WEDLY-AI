@@ -3,6 +3,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { SubscriptionProvider } from '@/hooks/use-subscription';
 import { UserProvider } from '@/hooks/use-user';
+import { PhotoProvider } from '@/hooks/use-photos';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
@@ -30,6 +31,7 @@ export default function RootLayout({
       <body className="font-body antialiased flex flex-col min-h-screen">
         <UserProvider>
           <SubscriptionProvider>
+            <PhotoProvider>
               <div className="flex-grow">
                 {children}
               </div>
@@ -43,6 +45,7 @@ export default function RootLayout({
                     </div>
                 </div>
               </footer>
+            </PhotoProvider>
           </SubscriptionProvider>
         </UserProvider>
       </body>

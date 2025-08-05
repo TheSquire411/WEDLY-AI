@@ -62,14 +62,17 @@ export function VisionBoard() {
   const onDragEnd = (result: DropResult) => {
     const { source, destination } = result;
     if (!destination) return;
+
+    // Draggable IDs are "generator" and "image-..."
+    // Draggable indices are 0 for generator, 1+ for images
+    // `react-beautiful-dnd` indices are 0-based for the list.
+    // So the generator is at index 0, and images are at indices 1 and up.
     
-    // Prevent dragging the generator
-    if (source.draggableId === 'generator' && destination.index === 0) return;
-
-
     const reorderedImages = Array.from(images);
-    const [movedImage] = reorderedImages.splice(source.index -1, 1);
-    reorderedImages.splice(destination.index -1, 0, movedImage);
+    // The `source.index` from dnd accounts for the generator at index 0
+    // but our `images` array does not. So we adjust by 1.
+    const [movedImage] = reorderedImages.splice(source.index - 1, 1);
+    reorderedImages.splice(destination.index - 1, 0, movedImage);
     
     setImages(reorderedImages);
   }
@@ -118,7 +121,7 @@ export function VisionBoard() {
         </div>
         
         <DragDropContext onDragEnd={onDragEnd}>
-            <Droppable droppableId="vision-board-grid" direction="horizontal">
+            <Droppable droppableId="vision-board-grid" direction="horizontal" isDropDisabled={false}>
                 {(provided) => (
                     <div 
                         ref={provided.innerRef}

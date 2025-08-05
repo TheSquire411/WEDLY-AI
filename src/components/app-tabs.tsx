@@ -7,12 +7,13 @@ import { TaskManager } from '@/components/task-manager';
 import { GuestList } from '@/components/guest-list';
 import { VisionBoard } from '@/components/vision-board';
 import { SeatingChart } from '@/components/seating-chart';
-import { LayoutDashboard, CircleDollarSign, ListChecks, Users, GalleryHorizontal, Armchair } from 'lucide-react';
+import { PhotoAlbum } from '@/components/photo-album';
+import { LayoutDashboard, CircleDollarSign, ListChecks, Users, GalleryHorizontal, Armchair, Camera } from 'lucide-react';
 
 export function AppTabs() {
   return (
     <Tabs defaultValue="dashboard" className="w-full">
-      <TabsList className="grid w-full grid-cols-2 sm:grid-cols-6 h-auto bg-primary/10 rounded-lg">
+      <TabsList className="grid w-full grid-cols-2 sm:grid-cols-7 h-auto bg-primary/10 rounded-lg">
         <TabsTrigger value="dashboard" className="py-3 text-sm data-[state=active]:bg-white data-[state=active]:text-primary-foreground data-[state=active]:shadow-md">
           <LayoutDashboard className="mr-2 h-5 w-5" />
           Dashboard
@@ -20,6 +21,10 @@ export function AppTabs() {
         <TabsTrigger value="vision-board" className="py-3 text-sm data-[state=active]:bg-white data-[state=active]:text-primary-foreground data-[state=active]:shadow-md">
           <GalleryHorizontal className="mr-2 h-5 w-5" />
           Vision Board
+        </TabsTrigger>
+         <TabsTrigger value="photos" className="py-3 text-sm data-[state=active]:bg-white data-[state=active]:text-primary-foreground data-[state=active]:shadow-md">
+          <Camera className="mr-2 h-5 w-5" />
+          Photos
         </TabsTrigger>
         <TabsTrigger value="budget" className="py-3 text-sm data-[state=active]:bg-white data-[state=active]:text-primary-foreground data-[state=active]:shadow-md">
           <CircleDollarSign className="mr-2 h-5 w-5" />
@@ -43,6 +48,9 @@ export function AppTabs() {
       </TabsContent>
        <TabsContent value="vision-board" className="mt-6">
         <VisionBoard />
+      </TabsContent>
+      <TabsContent value="photos" className="mt-6">
+        <PhotoAlbum />
       </TabsContent>
       <TabsContent value="budget" className="mt-6">
         <BudgetTracker />

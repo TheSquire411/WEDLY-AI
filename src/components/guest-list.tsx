@@ -1,3 +1,7 @@
+
+"use client";
+
+import * as React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,17 +13,37 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { PlusCircle } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { PlusCircle, MoreHorizontal, Trash2 } from "lucide-react";
 
-const guests = [
-  { name: 'Alice Johnson', rsvp: 'Confirmed', group: 'Bride\'s Family', table: 2 },
-  { name: 'Bob Williams', rsvp: 'Confirmed', group: 'Bride\'s Family', table: 2 },
-  { name: 'Charlie Brown', rsvp: 'Pending', group: 'Groom\'s Friends', table: null },
-  { name: 'Diana Miller', rsvp: 'Declined', group: 'Bride\'s Friends', table: null },
-  { name: 'Ethan Davis', rsvp: 'Confirmed', group: 'Groom\'s Family', table: 5 },
+const initialGuests = [
+  { name: 'Alice Johnson', rsvp: 'Confirmed', group: "Bride's Family", table: 2 },
+  { name: 'Bob Williams', rsvp: 'Confirmed', group: "Bride's Family", table: 2 },
+  { name: 'Charlie Brown', rsvp: 'Pending', group: "Groom's Friends", table: null },
+  { name: 'Diana Miller', rsvp: 'Declined', group: "Bride's Friends", table: null },
+  { name: 'Ethan Davis', rsvp: 'Confirmed', group: "Groom's Family", table: 5 },
   { name: 'Fiona Garcia', rsvp: 'Confirmed', group: 'Work Colleagues', table: 8 },
   { name: 'George Rodriguez', rsvp: 'Pending', group: 'Work Colleagues', table: null },
-  { name: 'Hannah Smith', rsvp: 'Confirmed', group: 'Groom\'s Family', table: 5 },
+  { name: 'Hannah Smith', rsvp: 'Confirmed', group: "Groom's Family", table: 5 },
 ];
 
 const getRsvpVariant = (rsvp: string) => {
@@ -35,44 +59,126 @@ const getRsvpVariant = (rsvp: string) => {
   }
 };
 
-
 export function GuestList() {
+  const [guests, setGuests] = React.useState(initialGuests);
+  const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
+  const [selectedGuest, setSelectedGuest] = React.useState<(typeof initialGuests)[0] | null>(null);
+  const [tempRsvp, setTempRsvp] = React.useState<string | undefined>(undefined);
+
+  const handleDeleteGuest = (guestName: string) => {
+    setGuests(guests.filter((guest) => guest.name !== guestName));
+  };
+
+  const handleEditClick = (guest: (typeof initialGuests)[0]) => {
+    setSelectedGuest(guest);
+    setTempRsvp(guest.rsvp);
+    setIsEditDialogOpen(true);
+  };
+  
+  const handleSaveRsvp = () => {
+    if (selectedGuest && tempRsvp) {
+      setGuests(
+        guests.map((g) =>
+          g.name === selectedGuest.name ? { ...g, rsvp: tempRsvp } : g
+        )
+      );
+    }
+    setIsEditDialogOpen(false);
+    setSelectedGuest(null);
+  };
+
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div>
+    <>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
             <CardTitle className="font-headline text-2xl">Guest List</CardTitle>
             <CardDescription>Manage your invited guests and track RSVPs.</CardDescription>
-        </div>
-        <Button>
+          </div>
+          <Button>
             <PlusCircle className="mr-2 h-4 w-4" />
             Add Guest
-        </Button>
-      </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead className="hidden sm:table-cell">Group</TableHead>
-              <TableHead>RSVP Status</TableHead>
-              <TableHead className="text-right">Table</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {guests.map((guest) => (
-              <TableRow key={guest.name}>
-                <TableCell className="font-medium">{guest.name}</TableCell>
-                <TableCell className="hidden sm:table-cell text-muted-foreground">{guest.group}</TableCell>
-                <TableCell>
-                  <Badge variant={getRsvpVariant(guest.rsvp) as any}>{guest.rsvp}</Badge>
-                </TableCell>
-                <TableCell className="text-right text-muted-foreground">{guest.table ?? 'N/A'}</TableCell>
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead className="hidden sm:table-cell">Group</TableHead>
+                <TableHead>RSVP Status</TableHead>
+                <TableHead className="hidden sm:table-cell text-right">Table</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
+            </TableHeader>
+            <TableBody>
+              {guests.map((guest) => (
+                <TableRow key={guest.name}>
+                  <TableCell className="font-medium">{guest.name}</TableCell>
+                  <TableCell className="hidden sm:table-cell text-muted-foreground">{guest.group}</TableCell>
+                  <TableCell>
+                    <Badge variant={getRsvpVariant(guest.rsvp) as any}>{guest.rsvp}</Badge>
+                  </TableCell>
+                  <TableCell className="hidden sm:table-cell text-right text-muted-foreground">{guest.table ?? 'N/A'}</TableCell>
+                  <TableCell className="text-right">
+                     <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                                <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleEditClick(guest)}>
+                                Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleDeleteGuest(guest.name)} className="text-destructive">
+                                <Trash2 className="mr-2 h-4 w-4"/>
+                                Delete
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+      
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Guest: {selectedGuest?.name}</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <Label>RSVP Status</Label>
+            <RadioGroup
+                value={tempRsvp}
+                onValueChange={setTempRsvp}
+                className="mt-2"
+            >
+                <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="Confirmed" id="r1" />
+                    <Label htmlFor="r1">Confirmed</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="Pending" id="r2" />
+                    <Label htmlFor="r2">Pending</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="Declined" id="r3" />
+                    <Label htmlFor="r3">Declined</Label>
+                </div>
+            </RadioGroup>
+          </div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button type="button" variant="secondary">Cancel</Button>
+            </DialogClose>
+            <Button type="button" onClick={handleSaveRsvp}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

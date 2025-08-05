@@ -2,7 +2,26 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, ListChecks, Gem } from "lucide-react";
 import { VowGenerator } from './vow-generator';
 
+// Mock data that would in a real app come from a DB or state management
+const budgetData = {
+  spent: 17750,
+  total: 20000,
+};
+
+const guestData = {
+  confirmed: 128,
+  total: 150,
+};
+
+const taskData = {
+  remaining: 7, // Assuming 4 completed out of 11
+  overdue: 3, // Mocking some overdue tasks
+};
+
+
 export function DashboardOverview() {
+  const budgetSpentPercent = (budgetData.spent / budgetData.total) * 100;
+
   return (
     <div>
       <h2 className="text-4xl font-headline mb-2 text-gray-800">Welcome, Jane &amp; John!</h2>
@@ -15,8 +34,8 @@ export function DashboardOverview() {
             <Gem className="h-5 w-5 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">$17,750 / $20,000</div>
-            <p className="text-xs text-muted-foreground">88% of budget spent</p>
+            <div className="text-2xl font-bold">${budgetData.spent.toLocaleString()} / ${budgetData.total.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground">{budgetSpentPercent.toFixed(0)}% of budget spent</p>
           </CardContent>
         </Card>
         <Card className="hover:shadow-lg transition-shadow">
@@ -25,7 +44,7 @@ export function DashboardOverview() {
             <Users className="h-5 w-5 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">128 / 150</div>
+            <div className="text-2xl font-bold">{guestData.confirmed} / {guestData.total}</div>
             <p className="text-xs text-muted-foreground">RSVPs confirmed</p>
           </CardContent>
         </Card>
@@ -35,8 +54,8 @@ export function DashboardOverview() {
             <ListChecks className="h-5 w-5 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">23</div>
-            <p className="text-xs text-muted-foreground">12 overdue</p>
+            <div className="text-2xl font-bold">{taskData.remaining}</div>
+            <p className="text-xs text-muted-foreground">{taskData.overdue} overdue</p>
           </CardContent>
         </Card>
       </div>

@@ -10,6 +10,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
+import { googleAI } from '@genkit-ai/googleai';
 
 const GuestSchema = z.object({
   name: z.string(),
@@ -44,6 +45,7 @@ const prompt = ai.definePrompt({
   name: 'seatingChartSuggestionsPrompt',
   input: { schema: SeatingChartSuggestionsInputSchema },
   output: { schema: SeatingChartSuggestionsOutputSchema },
+  model: googleAI.model('gemini-1.5-flash-latest'),
   prompt: `You are an expert wedding planner specializing in creating harmonious seating charts.
 
 You need to seat the following guests into {{tables}} tables, with a maximum of {{guestsPerTable}} guests per table.

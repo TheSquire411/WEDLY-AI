@@ -1,27 +1,64 @@
 
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { VisionBoardGenerator } from './vision-board-generator';
 import { Upload, Search } from 'lucide-react';
+import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
+
+interface VisionImage {
+    id: string;
+    src: string;
+    alt: string;
+    hint: string;
+}
+
+const initialImages: VisionImage[] = [
+    { id: 'image-1', src: "https://placehold.co/400x400.png", alt: "Wedding inspiration 1", hint: "wedding dress" },
+    { id: 'image-2', src: "https://placehold.co/400x400.png", alt: "Wedding inspiration 2", hint: "wedding venue" },
+    { id: 'image-3', src: "https://placehold.co/400x400.png", alt: "Wedding inspiration 3", hint: "wedding cake" },
+    { id: 'image-4', src: "https://placehold.co/400x400.png", alt: "Wedding inspiration 4", hint: "flower bouquet" },
+];
+
 
 export function VisionBoard() {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [images, setImages] = useState<VisionImage[]>(initialImages);
 
   const handleUploadClick = () => {
     fileInputRef.current?.click();
   };
+  
+  const addImage = (src: string, prompt: string) => {
+    const newImage: VisionImage = {
+        id: `image-${Date.now()}`,
+        src,
+        alt: prompt,
+        hint: prompt.split(' ').slice(0, 2).join(' '),
+    };
+    setImages(prev => [...prev, newImage]);
+  }
+
+  const onDragEnd = (result: DropResult) => {
+    const { source, destination } = result;
+    if (!destination) return;
+
+    const reorderedImages = Array.from(images);
+    const [movedImage] = reorderedImages.splice(source.index, 1);
+    reorderedImages.splice(destination.index, 0, movedImage);
+    
+    setImages(reorderedImages);
+  }
 
   return (
     <div>
         <div className="flex flex-col sm:flex-row gap-4 justify-between items-start mb-8">
             <div>
                 <h2 className="text-4xl font-headline text-gray-800">Vision Board</h2>
-                <p className="text-muted-foreground">Your wedding inspiration in one place.</p>
+                <p className="text-muted-foreground">Your wedding inspiration in one place. Drag to rearrange.</p>
             </div>
              <div className="flex gap-2">
                 <Input type="file" ref={fileInputRef} className="hidden" />
@@ -35,22 +72,45 @@ export function VisionBoard() {
                 </div>
             </div>
         </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            <VisionBoardGenerator />
-            <div className="overflow-hidden rounded-lg shadow-md aspect-square">
-                <Image src="https://placehold.co/400x400.png" alt="Wedding inspiration 1" data-ai-hint="wedding dress" width={400} height={400} className="object-cover w-full h-full hover:scale-105 transition-transform duration-300 ease-in-out" />
-            </div>
-            <div className="overflow-hidden rounded-lg shadow-md aspect-square">
-                <Image src="https://placehold.co/400x400.png" alt="Wedding inspiration 2" data-ai-hint="wedding venue" width={400} height={400} className="object-cover w-full h-full hover:scale-105 transition-transform duration-300 ease-in-out" />
-            </div>
-             <div className="overflow-hidden rounded-lg shadow-md aspect-square">
-                <Image src="https://placehold.co/400x400.png" alt="Wedding inspiration 3" data-ai-hint="wedding cake" width={400} height={400} className="object-cover w-full h-full hover:scale-105 transition-transform duration-300 ease-in-out" />
-            </div>
-             <div className="overflow-hidden rounded-lg shadow-md aspect-square">
-                <Image src="https://placehold.co/400x400.png" alt="Wedding inspiration 4" data-ai-hint="flower bouquet" width={400} height={400} className="object-cover w-full h-full hover:scale-105 transition-transform duration-300 ease-in-out" />
-            </div>
-        </div>
+        
+        <DragDropContext onDragEnd={onDragEnd}>
+            <Droppable droppableId="vision-board-grid" direction="horizontal">
+                {(provided) => (
+                    <div 
+                        ref={provided.innerRef}
+                        {...provided.droppableProps}
+                        className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+                    >
+                        <Draggable key="generator" draggableId="generator" index={0}>
+                            {(provided) => (
+                                <div
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    {...provided.dragHandleProps}
+                                >
+                                    <VisionBoardGenerator onImageGenerated={addImage} />
+                                </div>
+                            )}
+                        </Draggable>
+                        {images.map((image, index) => (
+                             <Draggable key={image.id} draggableId={image.id} index={index + 1}>
+                                {(provided) => (
+                                     <div
+                                        ref={provided.innerRef}
+                                        {...provided.draggableProps}
+                                        {...provided.dragHandleProps}
+                                        className="overflow-hidden rounded-lg shadow-md aspect-square"
+                                    >
+                                        <Image src={image.src} alt={image.alt} data-ai-hint={image.hint} width={400} height={400} className="object-cover w-full h-full hover:scale-105 transition-transform duration-300 ease-in-out" />
+                                    </div>
+                                )}
+                            </Draggable>
+                        ))}
+                        {provided.placeholder}
+                    </div>
+                )}
+            </Droppable>
+        </DragDropContext>
     </div>
   );
 }

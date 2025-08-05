@@ -20,8 +20,12 @@ const formSchema = z.object({
   prompt: z.string().min(5, { message: "Please enter a more detailed prompt." }),
 });
 
-export function VisionBoardGenerator() {
-  const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+interface VisionBoardGeneratorProps {
+    onImageGenerated: (src: string, prompt: string) => void;
+}
+
+export function VisionBoardGenerator({ onImageGenerated }: VisionBoardGeneratorProps) {
+  const [lastGeneratedImage, setLastGeneratedImage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -34,10 +38,12 @@ export function VisionBoardGenerator() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
-    setGeneratedImage(null);
+    setLastGeneratedImage(null);
     try {
       const result = await generateImage(values);
-      setGeneratedImage(result.image);
+      setLastGeneratedImage(result.image);
+      onImageGenerated(result.image, values.prompt);
+      form.reset({ prompt: '' });
     } catch (error) {
       console.error('AI Image Generator Error:', error);
       toast({
@@ -52,25 +58,23 @@ export function VisionBoardGenerator() {
 
   return (
     <Card className="overflow-hidden shadow-md aspect-square flex flex-col">
-        {generatedImage ? (
-            <div className="relative w-full h-full">
-                <Image src={generatedImage} alt={form.getValues('prompt')} layout="fill" className="object-cover" />
-            </div>
-        ) : (
-            <div className="bg-muted/30 h-full flex items-center justify-center p-4">
-                {isLoading ? (
-                    <div className="flex flex-col items-center gap-4">
-                        <Skeleton className="h-24 w-24 rounded-lg" />
-                        <p className="text-sm text-muted-foreground animate-pulse">Generating your vision...</p>
-                    </div>
-                ) : (
-                    <div className="text-center text-muted-foreground">
-                        <ImagePlus className="mx-auto h-12 w-12 opacity-50" />
-                        <p className="mt-2 text-sm">Generate an image for your vision board</p>
-                    </div>
-                )}
-            </div>
-        )}
+        <div className="bg-muted/30 h-full flex items-center justify-center p-4">
+            {isLoading ? (
+                <div className="flex flex-col items-center gap-4">
+                    <Skeleton className="h-24 w-24 rounded-lg" />
+                    <p className="text-sm text-muted-foreground animate-pulse">Generating your vision...</p>
+                </div>
+            ) : lastGeneratedImage ? (
+                 <div className="relative w-full h-full">
+                    <Image src={lastGeneratedImage} alt="Last generated image" layout="fill" className="object-cover rounded-md" />
+                 </div>
+            ) : (
+                <div className="text-center text-muted-foreground">
+                    <ImagePlus className="mx-auto h-12 w-12 opacity-50" />
+                    <p className="mt-2 text-sm">Generate an image for your vision board</p>
+                </div>
+            )}
+        </div>
         <CardContent className="p-3 bg-background/80 backdrop-blur-sm mt-auto">
             <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="flex items-start gap-2">

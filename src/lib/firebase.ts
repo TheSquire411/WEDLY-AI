@@ -7,15 +7,13 @@ import { getFirestore } from "firebase/firestore";
 // https://firebase.google.com/docs/web/setup#available-libraries
 
 // Your web app's Firebase configuration
-// IMPORTANT: Replace this with your actual Firebase project configuration
-// You can find this in your Firebase project settings
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyAloQLFRyrY3fUEIiJgyq4arnv52PEDSgY",
+  authDomain: "wedly-minimal.firebaseapp.com",
+  projectId: "wedly-minimal",
+  storageBucket: "wedly-minimal.appspot.com",
+  messagingSenderId: "974305323252",
+  appId: "1:974305323252:web:8733e74b8405a2111a96a1"
 };
 
 // Initialize Firebase

@@ -1,7 +1,11 @@
+
+"use client";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, ListChecks, Gem } from "lucide-react";
 import { VowGenerator } from './vow-generator';
 import { WeddingAssistant } from "./wedding-assistant";
+import { useUser } from "@/hooks/use-user";
 
 // Mock data that would in a real app come from a DB or state management
 const budgetData = {
@@ -22,10 +26,11 @@ const taskData = {
 
 export function DashboardOverview() {
   const budgetSpentPercent = (budgetData.spent / budgetData.total) * 100;
+  const { user } = useUser();
 
   return (
     <div>
-      <h2 className="text-4xl font-headline mb-2 text-gray-800">Welcome, Jane &amp; John!</h2>
+      <h2 className="text-4xl font-headline mb-2 text-gray-800">Welcome, {user.name1} &amp; {user.name2}!</h2>
       <p className="text-muted-foreground mb-8">Here's a snapshot of your wedding planning progress.</p>
       
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

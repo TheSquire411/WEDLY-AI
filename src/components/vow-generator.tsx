@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { generateVows } from '@/ai/flows/vow-generator';
 import { useSubscription } from '@/hooks/use-subscription';
+import { useUser } from '@/hooks/use-user';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,11 +30,12 @@ export function VowGenerator() {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { isPremium, openDialog } = useSubscription();
+  const { user } = useUser();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      partnerName: 'John',
+      partnerName: user.name2,
       keyMemories: 'Our first trip to the beach, the time we built a pillow fort and watched movies all day, and when we adopted our puppy, Sparky.',
       tone: 'romantic',
     },

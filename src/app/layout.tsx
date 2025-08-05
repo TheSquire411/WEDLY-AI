@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { SubscriptionProvider } from '@/hooks/use-subscription';
+import { UserProvider } from '@/hooks/use-user';
 
 export const metadata: Metadata = {
   title: 'Wedly Minimal',
@@ -22,10 +23,12 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased">
-        <SubscriptionProvider>
-            {children}
-            <Toaster />
-        </SubscriptionProvider>
+        <UserProvider>
+          <SubscriptionProvider>
+              {children}
+              <Toaster />
+          </SubscriptionProvider>
+        </UserProvider>
       </body>
     </html>
   );

@@ -2,6 +2,9 @@
 "use client";
 
 import { useState, useMemo } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { budgetAllocationSuggestions } from '@/ai/flows/budget-allocation-suggestions';
 import { Button } from '@/components/ui/button';
 import {
@@ -12,6 +15,16 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter,
+    DialogClose,
+} from '@/components/ui/dialog';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
@@ -48,11 +61,30 @@ interface BudgetTrackerProps {
     setExpenses: (value: Expense[]) => void;
 }
 
+const expenseSchema = z.object({
+    category: z.string().min(1, "Category is required"),
+    vendor: z.string().min(1, "Vendor is required"),
+    actual: z.coerce.number().min(0, "Amount must be positive"),
+    dueDate: z.coerce.date(),
+});
+
+
 export function BudgetTracker({ totalBudget, setTotalBudget, expenses, setExpenses }: BudgetTrackerProps) {
   const [suggestions, setSuggestions] = useState<BudgetItem[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
   const { toast } = useToast();
   const { isPremium, openDialog } = useSubscription();
+  
+  const form = useForm<z.infer<typeof expenseSchema>>({
+    resolver: zodResolver(expenseSchema),
+    defaultValues: {
+      category: "",
+      vendor: "",
+      actual: 0,
+      dueDate: new Date(),
+    },
+  });
 
   const totalSpent = useMemo(() => {
     return expenses.filter(e => e.paid).reduce((sum, expense) => sum + expense.actual, 0);
@@ -106,6 +138,23 @@ export function BudgetTracker({ totalBudget, setTotalBudget, expenses, setExpens
     );
   };
 
+  function handleAddExpense(values: z.infer<typeof expenseSchema>) {
+    const newExpense: Expense = {
+      id: `exp-${Date.now()}`,
+      ...values,
+      estimated: values.actual, // For simplicity, we'll set estimated to actual for new expenses
+      paid: false,
+      reminder: false,
+    };
+    setExpenses([newExpense, ...expenses]);
+    toast({
+        title: "Expense Added",
+        description: `${values.category} for $${values.actual} has been added to your budget.`,
+    });
+    form.reset();
+    setIsAddExpenseOpen(false);
+  }
+
   return (
     <div className="space-y-8">
       <Card>
@@ -151,7 +200,7 @@ export function BudgetTracker({ totalBudget, setTotalBudget, expenses, setExpens
                 <CardTitle className="font-headline text-2xl">Expense Tracker</CardTitle>
                 <CardDescription>Keep track of your wedding expenses.</CardDescription>
               </div>
-               <Button variant="outline">
+               <Button variant="outline" onClick={() => setIsAddExpenseOpen(true)}>
                 <PlusCircle className="mr-2" />
                 Add Expense
               </Button>
@@ -237,6 +286,84 @@ export function BudgetTracker({ totalBudget, setTotalBudget, expenses, setExpens
           </Card>
         </div>
       </div>
+       <Dialog open={isAddExpenseOpen} onOpenChange={setIsAddExpenseOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add New Expense</DialogTitle>
+            <DialogDescription>
+              Enter the details of your new expense below.
+            </DialogDescription>
+          </DialogHeader>
+            <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleAddExpense)} className="space-y-4 py-4">
+                <FormField
+                    control={form.control}
+                    name="category"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Category</FormLabel>
+                        <FormControl>
+                            <Input placeholder="e.g. Catering" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="vendor"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Vendor</FormLabel>
+                        <FormControl>
+                            <Input placeholder="e.g. Gourmet Delights" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                 <FormField
+                    control={form.control}
+                    name="actual"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Amount</FormLabel>
+                        <FormControl>
+                             <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                                <Input type="number" placeholder="1200" {...field} className="pl-7"/>
+                            </div>
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                 <FormField
+                    control={form.control}
+                    name="dueDate"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Due Date</FormLabel>
+                        <FormControl>
+                            <Input type="date" {...field} 
+                             onChange={e => field.onChange(new Date(e.target.value))}
+                             value={field.value ? format(field.value, 'yyyy-MM-dd') : ''}
+                            />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                <DialogFooter>
+                    <DialogClose asChild>
+                    <Button type="button" variant="secondary">Cancel</Button>
+                    </DialogClose>
+                    <Button type="submit">Add Expense</Button>
+                </DialogFooter>
+            </form>
+            </Form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

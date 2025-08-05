@@ -1,12 +1,11 @@
 
-
 "use client";
 
 import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { UploadCloud, CheckCircle, XCircle, Gem } from 'lucide-react';
+import { UploadCloud, CheckCircle, XCircle, Gem, Loader2 } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 import { Header } from '@/components/header';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -40,12 +39,12 @@ export default function GuestUploadPage() {
         preview: URL.createObjectURL(file)
     }));
     setFiles(prev => [...prev, ...newFiles]);
-  }, [files, isPremium, photos, toast]);
+  }, [files.length, isPremium, photos.length, toast]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: { 'image/*': [] },
-    disabled: !isPremium && (files.length + photos.length) >= FREE_TIER_LIMIT
+    disabled: !isPremium && (photos.length) >= FREE_TIER_LIMIT
   });
 
   const removeFile = (fileName: string) => {
@@ -60,30 +59,44 @@ export default function GuestUploadPage() {
     setIsUploading(true);
     toast({ title: "Uploading...", description: `Uploading ${files.length} photos.` });
     
-    setTimeout(() => {
-        files.forEach(file => {
-            addPhoto({
-                src: file.preview,
-                alt: file.name,
-                hint: 'guest upload'
-            });
-        });
-
-        setIsUploading(false);
-        setFiles([]);
-        toast({
-            title: "Upload Successful!",
-            description: "Thank you for sharing your photos.",
-            action: (
-                <div className="p-1 rounded-full bg-green-500">
-                    <CheckCircle className="h-5 w-5 text-white" />
-                </div>
-            ),
-        });
-    }, 1000);
+    let uploadedCount = 0;
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        if (e.target?.result) {
+          addPhoto({
+            src: e.target.result as string,
+            alt: file.name,
+            hint: 'guest upload'
+          });
+        }
+        uploadedCount++;
+        if (uploadedCount === files.length) {
+          setIsUploading(false);
+          setFiles([]);
+          toast({
+              title: "Upload Successful!",
+              description: "Thank you for sharing your photos.",
+              action: (
+                  <div className="p-1 rounded-full bg-green-500">
+                      <CheckCircle className="h-5 w-5 text-white" />
+                  </div>
+              ),
+          });
+        }
+      };
+      reader.onerror = () => {
+        uploadedCount++;
+        if (uploadedCount === files.length) {
+           setIsUploading(false);
+        }
+        toast({ variant: "destructive", title: "Upload Failed", description: `Could not upload ${file.name}.` });
+      }
+      reader.readAsDataURL(file);
+    });
   };
   
-  const limitReached = !isPremium && (files.length + photos.length) >= FREE_TIER_LIMIT;
+  const limitReached = !isPremium && (photos.length) >= FREE_TIER_LIMIT;
 
 
   return (
@@ -132,7 +145,7 @@ export default function GuestUploadPage() {
                   ))}
                 </div>
                 <Button onClick={handleUpload} disabled={isUploading || limitReached} className="w-full">
-                  {isUploading ? "Uploading..." : `Upload ${files.length} Photo(s)`}
+                  {isUploading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin"/> Uploading...</> : `Upload ${files.length} Photo(s)`}
                 </Button>
               </div>
             )}

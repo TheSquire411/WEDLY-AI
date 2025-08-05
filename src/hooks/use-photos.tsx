@@ -16,14 +16,14 @@ interface PhotoContextType {
 
 const PhotoContext = createContext<PhotoContextType | undefined>(undefined);
 
-const initialImages = [
-  { src: "https://placehold.co/600x400.png", alt: "Guest photo 1", hint: "wedding guests" },
-  { src: "https://placehold.co/400x600.png", alt: "Guest photo 2", hint: "bride groom" },
-  { src: "https://placehold.co/600x400.png", alt: "Guest photo 3", hint: "wedding dance" },
-  { src: "https://placehold.co/600x400.png", alt: "Guest photo 4", hint: "wedding toast" },
-  { src: "https://placehold.co/400x600.png", alt: "Guest photo 5", hint: "wedding cake" },
-  { src: "https://placehold.co/600x400.png", alt: "Guest photo 6", hint: "newlyweds kissing" },
-];
+const initialImages: Photo[] = [
+    { id: 'initial-1', src: "https://placehold.co/600x400.png", alt: "Guest photo 1", hint: "wedding guests" },
+    { id: 'initial-2', src: "https://placehold.co/400x600.png", alt: "Guest photo 2", hint: "bride groom" },
+    { id: 'initial-3', src: "https://placehold.co/600x400.png", alt: "Guest photo 3", hint: "wedding dance" },
+    { id: 'initial-4', src: "https://placehold.co/600x400.png", alt: "Guest photo 4", hint: "wedding toast" },
+    { id: 'initial-5', src: "https://placehold.co/400x600.png", alt: "Guest photo 5", hint: "wedding cake" },
+    { id: 'initial-6', src: "https://placehold.co/600x400.png", alt: "Guest photo 6", hint: "newlyweds kissing" },
+].map(p => ({...p, src: `${p.src}?id=${Math.random()}`})); // Add random query to bust cache
 
 
 export const PhotoProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {

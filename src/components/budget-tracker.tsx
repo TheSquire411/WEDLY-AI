@@ -30,20 +30,27 @@ import { Badge } from './ui/badge';
 import { format } from 'date-fns';
 import { useSubscription } from '@/hooks/use-subscription';
 
-const initialExpenses = [
-  { category: 'Venue', estimated: 5000, actual: 5500, vendor: 'Sunshine Meadows', dueDate: new Date('2024-10-01'), paid: true, reminder: false },
-  { category: 'Catering', estimated: 6000, actual: 5800, vendor: 'Gourmet Delights', dueDate: new Date('2024-10-15'), paid: true, reminder: false },
-  { category: 'Photography', estimated: 2500, actual: 2500, vendor: 'Timeless Snaps', dueDate: new Date('2024-09-20'), paid: true, reminder: true },
-  { category: 'Flowers', estimated: 1500, actual: 1200, vendor: 'Blooming Creations', dueDate: new Date('2024-11-01'), paid: false, reminder: false },
-  { category: 'Attire', estimated: 2000, actual: 2750, vendor: 'Elegant Gowns', dueDate: new Date('2024-08-30'), paid: true, reminder: false },
-  { category: 'Entertainment', estimated: 3000, actual: 3000, vendor: 'Groove Band', dueDate: new Date('2024-11-10'), paid: false, reminder: true },
-];
+export interface Expense {
+    id: string;
+    category: string;
+    estimated: number;
+    actual: number;
+    vendor: string;
+    dueDate: Date;
+    paid: boolean;
+    reminder: boolean;
+}
 
-export function BudgetTracker() {
+interface BudgetTrackerProps {
+    totalBudget: number;
+    setTotalBudget: (value: number) => void;
+    expenses: Expense[];
+    setExpenses: (value: Expense[]) => void;
+}
+
+export function BudgetTracker({ totalBudget, setTotalBudget, expenses, setExpenses }: BudgetTrackerProps) {
   const [suggestions, setSuggestions] = useState<BudgetItem[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [totalBudget, setTotalBudget] = useState(20000);
-  const [expenses, setExpenses] = useState(initialExpenses);
   const { toast } = useToast();
   const { isPremium, openDialog } = useSubscription();
 
@@ -52,7 +59,7 @@ export function BudgetTracker() {
   }, [expenses]);
 
   const remainingBudget = useMemo(() => totalBudget - totalSpent, [totalBudget, totalSpent]);
-  const spentPercentage = useMemo(() => (totalSpent / totalBudget) * 100, [totalBudget, totalSpent]);
+  const spentPercentage = useMemo(() => (totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0), [totalBudget, totalSpent]);
 
   async function getSuggestions() {
     if (!isPremium) {
@@ -85,17 +92,17 @@ export function BudgetTracker() {
     }
   }
 
-  const togglePaidStatus = (category: string) => {
-    setExpenses(prev =>
-      prev.map(e =>
-        e.category === category ? { ...e, paid: !e.paid } : e
+  const togglePaidStatus = (id: string) => {
+    setExpenses(
+      expenses.map(e =>
+        e.id === id ? { ...e, paid: !e.paid } : e
       )
     );
   };
   
-  const toggleReminder = (category: string) => {
-    setExpenses(prev =>
-        prev.map(e => (e.category === category ? { ...e, reminder: !e.reminder } : e))
+  const toggleReminder = (id: string) => {
+    setExpenses(
+        expenses.map(e => (e.id === id ? { ...e, reminder: !e.reminder } : e))
     );
   };
 
@@ -162,7 +169,7 @@ export function BudgetTracker() {
                 </TableHeader>
                 <TableBody>
                   {expenses.map((expense) => (
-                    <TableRow key={expense.category} className={`${expense.paid ? 'bg-green-50/50' : ''}`}>
+                    <TableRow key={expense.id} className={`${expense.paid ? 'bg-green-50/50' : ''}`}>
                       <TableCell className="font-medium">{expense.category}<br/><span className="text-xs text-muted-foreground">{expense.vendor}</span></TableCell>
                       <TableCell>${expense.actual.toLocaleString()}</TableCell>
                       <TableCell>{format(expense.dueDate, 'MMM d, yyyy')}</TableCell>
@@ -173,7 +180,7 @@ export function BudgetTracker() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => toggleReminder(expense.category)}
+                          onClick={() => toggleReminder(expense.id)}
                           className={expense.reminder ? 'text-primary' : 'text-muted-foreground'}
                         >
                           <Bell className="h-4 w-4" />
@@ -181,7 +188,7 @@ export function BudgetTracker() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => togglePaidStatus(expense.category)}
+                          onClick={() => togglePaidStatus(expense.id)}
                           disabled={expense.paid}
                         >
                           <CheckCircle2 className="mr-2 h-4 w-4"/>

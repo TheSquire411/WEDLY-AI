@@ -9,27 +9,24 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from 'lucide-react';
 
-const initialTasks = [
-  { id: '1', title: 'Set a date and book venue', dueDate: '12 months out', completed: true },
-  { id: '2', title: 'Finalize guest list', dueDate: '10 months out', completed: true },
-  { id: '3', title: 'Book photographer and videographer', dueDate: '9 months out', completed: true },
-  { id: '4', title: 'Hire a caterer', dueDate: '8 months out', completed: false },
-  { id: '5', title: 'Send save-the-dates', dueDate: '6-8 months out', completed: false },
-  { id: '6', title: 'Purchase wedding attire', dueDate: '6 months out', completed: true },
-  { id: '7', title: 'Book entertainment', dueDate: '5 months out', completed: false },
-  { id: '8', title: 'Order invitations', dueDate: '4 months out', completed: false },
-  { id: '9', title: 'Finalize menu and floral selections', dueDate: '3 months out', completed: false },
-  { id: '10', title: 'Apply for marriage license', dueDate: '1 month out', completed: false },
-  { id: '11', title: 'Confirm final details with vendors', dueDate: '1-2 weeks out', completed: false },
-];
+export interface Task {
+    id: string;
+    title: string;
+    dueDate: string;
+    completed: boolean;
+}
 
-export function TaskManager() {
-  const [tasks, setTasks] = React.useState(initialTasks);
+interface TaskManagerProps {
+    tasks: Task[];
+    setTasks: (tasks: Task[]) => void;
+}
+
+export function TaskManager({ tasks, setTasks }: TaskManagerProps) {
   const [newTaskTitle, setNewTaskTitle] = React.useState("");
 
   const handleTaskToggle = (taskId: string) => {
-    setTasks(currentTasks =>
-      currentTasks.map(task =>
+    setTasks(
+      tasks.map(task =>
         task.id === taskId ? { ...task, completed: !task.completed } : task
       )
     );
@@ -39,14 +36,14 @@ export function TaskManager() {
     e.preventDefault();
     if (newTaskTitle.trim() === "") return;
 
-    const newTask = {
-      id: String(Date.now()), // More robust unique ID
+    const newTask: Task = {
+      id: String(Date.now()),
       title: newTaskTitle.trim(),
       dueDate: 'Just added',
       completed: false,
     };
 
-    setTasks(currentTasks => [newTask, ...currentTasks]);
+    setTasks([newTask, ...tasks]);
     setNewTaskTitle("");
   };
 

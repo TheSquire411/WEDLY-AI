@@ -17,10 +17,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -35,16 +31,18 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { PlusCircle, MoreHorizontal, Trash2 } from "lucide-react";
 
-const initialGuests = [
-  { name: 'Alice Johnson', rsvp: 'Confirmed', group: "Bride's Family", table: 2 },
-  { name: 'Bob Williams', rsvp: 'Confirmed', group: "Bride's Family", table: 2 },
-  { name: 'Charlie Brown', rsvp: 'Pending', group: "Groom's Friends", table: null },
-  { name: 'Diana Miller', rsvp: 'Declined', group: "Bride's Friends", table: null },
-  { name: 'Ethan Davis', rsvp: 'Confirmed', group: "Groom's Family", table: 5 },
-  { name: 'Fiona Garcia', rsvp: 'Confirmed', group: 'Work Colleagues', table: 8 },
-  { name: 'George Rodriguez', rsvp: 'Pending', group: 'Work Colleagues', table: null },
-  { name: 'Hannah Smith', rsvp: 'Confirmed', group: "Groom's Family", table: 5 },
-];
+export interface Guest {
+    id: string;
+    name: string;
+    rsvp: 'Confirmed' | 'Pending' | 'Declined';
+    group: string;
+    table: number | null;
+}
+
+interface GuestListProps {
+    guests: Guest[];
+    setGuests: (guests: Guest[]) => void;
+}
 
 const getRsvpVariant = (rsvp: string) => {
   switch (rsvp) {
@@ -59,17 +57,16 @@ const getRsvpVariant = (rsvp: string) => {
   }
 };
 
-export function GuestList() {
-  const [guests, setGuests] = React.useState(initialGuests);
+export function GuestList({ guests, setGuests }: GuestListProps) {
   const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
-  const [selectedGuest, setSelectedGuest] = React.useState<(typeof initialGuests)[0] | null>(null);
-  const [tempRsvp, setTempRsvp] = React.useState<string | undefined>(undefined);
+  const [selectedGuest, setSelectedGuest] = React.useState<Guest | null>(null);
+  const [tempRsvp, setTempRsvp] = React.useState<Guest['rsvp'] | undefined>(undefined);
 
-  const handleDeleteGuest = (guestName: string) => {
-    setGuests(guests.filter((guest) => guest.name !== guestName));
+  const handleDeleteGuest = (guestId: string) => {
+    setGuests(guests.filter((guest) => guest.id !== guestId));
   };
 
-  const handleEditClick = (guest: (typeof initialGuests)[0]) => {
+  const handleEditClick = (guest: Guest) => {
     setSelectedGuest(guest);
     setTempRsvp(guest.rsvp);
     setIsEditDialogOpen(true);
@@ -79,7 +76,7 @@ export function GuestList() {
     if (selectedGuest && tempRsvp) {
       setGuests(
         guests.map((g) =>
-          g.name === selectedGuest.name ? { ...g, rsvp: tempRsvp } : g
+          g.id === selectedGuest.id ? { ...g, rsvp: tempRsvp } : g
         )
       );
     }
@@ -113,7 +110,7 @@ export function GuestList() {
             </TableHeader>
             <TableBody>
               {guests.map((guest) => (
-                <TableRow key={guest.name}>
+                <TableRow key={guest.id}>
                   <TableCell className="font-medium">{guest.name}</TableCell>
                   <TableCell className="hidden sm:table-cell text-muted-foreground">{guest.group}</TableCell>
                   <TableCell>
@@ -131,7 +128,7 @@ export function GuestList() {
                             <DropdownMenuItem onClick={() => handleEditClick(guest)}>
                                 Edit
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleDeleteGuest(guest.name)} className="text-destructive">
+                            <DropdownMenuItem onClick={() => handleDeleteGuest(guest.id)} className="text-destructive">
                                 <Trash2 className="mr-2 h-4 w-4"/>
                                 Delete
                             </DropdownMenuItem>
@@ -154,7 +151,7 @@ export function GuestList() {
             <Label>RSVP Status</Label>
             <RadioGroup
                 value={tempRsvp}
-                onValueChange={setTempRsvp}
+                onValueChange={(value) => setTempRsvp(value as Guest['rsvp'])}
                 className="mt-2"
             >
                 <div className="flex items-center space-x-2">

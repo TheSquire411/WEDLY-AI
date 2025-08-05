@@ -7,25 +7,23 @@ import { VowGenerator } from './vow-generator';
 import { WeddingAssistant } from "./wedding-assistant";
 import { useUser } from "@/hooks/use-user";
 
-// Mock data that would in a real app come from a DB or state management
-const budgetData = {
-  spent: 17750,
-  total: 20000,
-};
+interface DashboardOverviewProps {
+    budgetSummary: {
+        spent: number;
+        total: number;
+    };
+    guestSummary: {
+        confirmed: number;
+        total: number;
+    };
+    taskSummary: {
+        remaining: number;
+        overdue: number;
+    };
+}
 
-const guestData = {
-  confirmed: 128,
-  total: 150,
-};
-
-const taskData = {
-  remaining: 7, // Assuming 4 completed out of 11
-  overdue: 3, // Mocking some overdue tasks
-};
-
-
-export function DashboardOverview() {
-  const budgetSpentPercent = (budgetData.spent / budgetData.total) * 100;
+export function DashboardOverview({ budgetSummary, guestSummary, taskSummary }: DashboardOverviewProps) {
+  const budgetSpentPercent = budgetSummary.total > 0 ? (budgetSummary.spent / budgetSummary.total) * 100 : 0;
   const { user } = useUser();
 
   return (
@@ -40,7 +38,7 @@ export function DashboardOverview() {
             <Gem className="h-5 w-5 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${budgetData.spent.toLocaleString()} / ${budgetData.total.toLocaleString()}</div>
+            <div className="text-2xl font-bold">${budgetSummary.spent.toLocaleString()} / ${budgetSummary.total.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">{budgetSpentPercent.toFixed(0)}% of budget spent</p>
           </CardContent>
         </Card>
@@ -50,7 +48,7 @@ export function DashboardOverview() {
             <Users className="h-5 w-5 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{guestData.confirmed} / {guestData.total}</div>
+            <div className="text-2xl font-bold">{guestSummary.confirmed} / {guestSummary.total}</div>
             <p className="text-xs text-muted-foreground">RSVPs confirmed</p>
           </CardContent>
         </Card>
@@ -60,8 +58,8 @@ export function DashboardOverview() {
             <ListChecks className="h-5 w-5 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{taskData.remaining}</div>
-            <p className="text-xs text-muted-foreground">{taskData.overdue} overdue</p>
+            <div className="text-2xl font-bold">{taskSummary.remaining}</div>
+            <p className="text-xs text-muted-foreground">{taskSummary.overdue} overdue</p>
           </CardContent>
         </Card>
       </div>

@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, ListChecks, Gem } from "lucide-react";
 import { VowGenerator } from './vow-generator';
+import { WeddingAssistant } from "./wedding-assistant";
 
 // Mock data that would in a real app come from a DB or state management
 const budgetData = {
@@ -60,9 +61,11 @@ export function DashboardOverview() {
         </Card>
       </div>
 
-      <div className="mt-8">
+      <div className="grid gap-8 mt-8 md:grid-cols-2">
+        <WeddingAssistant />
         <VowGenerator />
       </div>
+
     </div>
   );
 }

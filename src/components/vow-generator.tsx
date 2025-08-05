@@ -55,7 +55,7 @@ export function VowGenerator() {
   }
 
   return (
-    <Card>
+    <Card className="h-full flex flex-col">
       <CardHeader>
         <CardTitle className="font-headline text-2xl flex items-center gap-2">
           <Sparkles className="h-6 w-6 text-primary" />
@@ -65,22 +65,47 @@ export function VowGenerator() {
           Struggling to find the right words? Let our AI help you craft the perfect vows.
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-grow flex flex-col">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="partnerName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Partner's Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g. Alex" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid sm:grid-cols-2 gap-4">
+               <FormField
+                control={form.control}
+                name="partnerName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Partner's Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g. Alex" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+               <FormField
+                control={form.control}
+                name="tone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Desired Tone</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a tone" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="romantic">Romantic</SelectItem>
+                        <SelectItem value="humorous">Humorous</SelectItem>
+                        <SelectItem value="sentimental">Sentimental</SelectItem>
+                        <SelectItem value="traditional">Traditional</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             <FormField
               control={form.control}
               name="keyMemories"
@@ -88,31 +113,8 @@ export function VowGenerator() {
                 <FormItem>
                   <FormLabel>Share some key memories</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="e.g. Our first date, a special trip, an inside joke..." {...field} />
+                    <Textarea placeholder="e.g. Our first date, a special trip, an inside joke..." {...field} rows={3}/>
                   </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="tone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Desired Tone</FormLabel>
-                   <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a tone" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="romantic">Romantic</SelectItem>
-                      <SelectItem value="humorous">Humorous</SelectItem>
-                      <SelectItem value="sentimental">Sentimental</SelectItem>
-                      <SelectItem value="traditional">Traditional</SelectItem>
-                    </SelectContent>
-                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
@@ -131,7 +133,7 @@ export function VowGenerator() {
         {generatedVows && (
           <div className="mt-6 border-t pt-6">
             <h3 className="font-headline text-xl text-center mb-4">Your AI-Drafted Vows</h3>
-            <div className="prose prose-sm max-w-none bg-primary/5 p-4 rounded-lg text-foreground/90">
+            <div className="prose prose-sm max-w-none bg-primary/5 p-4 rounded-lg text-foreground/90 flex-grow">
                 <p className="whitespace-pre-wrap">{generatedVows}</p>
             </div>
           </div>

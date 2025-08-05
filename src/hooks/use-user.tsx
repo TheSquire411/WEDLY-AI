@@ -47,7 +47,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 const userDoc = await getDoc(userDocRef);
                 
                 if (userDoc.exists()) {
-                     setUser({ ...userDoc.data(), email: firebaseUser.email } as UserData);
+                     setUser({ ...userDoc.data(), uid: firebaseUser.uid, email: firebaseUser.email } as UserData);
                 } else {
                     // This happens with social sign-ins for the first time
                     const displayName = firebaseUser.displayName || "Jane,John";

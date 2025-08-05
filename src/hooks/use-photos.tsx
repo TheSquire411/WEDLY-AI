@@ -1,36 +1,58 @@
 
 "use client";
 
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { db } from '@/lib/firebase';
+import { collection, addDoc, onSnapshot, query, orderBy } from 'firebase/firestore';
 
 interface Photo {
+  id: string;
   src: string;
   alt: string;
   hint: string;
+  createdAt: Date;
 }
 
 interface PhotoContextType {
   photos: Photo[];
-  addPhoto: (photo: Photo) => void;
+  addPhoto: (photo: Omit<Photo, 'id' | 'createdAt'>) => Promise<void>;
 }
 
 const PhotoContext = createContext<PhotoContextType | undefined>(undefined);
 
-const initialImages: Photo[] = [
-    { id: 'initial-1', src: "https://placehold.co/600x400.png", alt: "Guest photo 1", hint: "wedding guests" },
-    { id: 'initial-2', src: "https://placehold.co/400x600.png", alt: "Guest photo 2", hint: "bride groom" },
-    { id: 'initial-3', src: "https://placehold.co/600x400.png", alt: "Guest photo 3", hint: "wedding dance" },
-    { id: 'initial-4', src: "https://placehold.co/600x400.png", alt: "Guest photo 4", hint: "wedding toast" },
-    { id: 'initial-5', src: "https://placehold.co/400x600.png", alt: "Guest photo 5", hint: "wedding cake" },
-    { id: 'initial-6', src: "https://placehold.co/600x400.png", alt: "Guest photo 6", hint: "newlyweds kissing" },
-].map(p => ({...p, src: `${p.src}?id=${Math.random()}`})); // Add random query to bust cache
-
-
 export const PhotoProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [photos, setPhotos] = useState<Photo[]>(initialImages);
+  const [photos, setPhotos] = useState<Photo[]>([]);
 
-  const addPhoto = (photo: Photo) => {
-    setPhotos(prevPhotos => [photo, ...prevPhotos]);
+  useEffect(() => {
+    const q = query(collection(db, "photos"), orderBy("createdAt", "desc"));
+    
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const photosData: Photo[] = [];
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        photosData.push({
+            id: doc.id,
+            ...data,
+            createdAt: data.createdAt.toDate(), // Convert Firestore Timestamp to JS Date
+        } as Photo);
+      });
+      setPhotos(photosData);
+    }, (error) => {
+        console.error("Error fetching photos from Firestore: ", error);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const addPhoto = async (photo: Omit<Photo, 'id' | 'createdAt'>) => {
+    try {
+        await addDoc(collection(db, "photos"), {
+            ...photo,
+            createdAt: new Date(),
+        });
+    } catch (error) {
+        console.error("Error adding photo to Firestore: ", error);
+    }
   };
 
   const value = {

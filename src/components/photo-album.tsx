@@ -126,8 +126,8 @@ export function PhotoAlbum() {
         )}
 
         <div className="columns-2 sm:columns-3 md:columns-4 lg:columns-5 gap-4 space-y-4">
-            {photos.map((image, index) => (
-                <div key={index} className="overflow-hidden rounded-lg shadow-md break-inside-avoid">
+            {photos.map((image) => (
+                <div key={image.id} className="overflow-hidden rounded-lg shadow-md break-inside-avoid">
                     <Image 
                         src={image.src} 
                         alt={image.alt} 

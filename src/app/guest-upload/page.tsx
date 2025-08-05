@@ -51,49 +51,57 @@ export default function GuestUploadPage() {
     setFiles(prev => prev.filter(file => file.name !== fileName));
   };
   
-  const handleUpload = () => {
+  const handleUpload = async () => {
     if (files.length === 0) {
-        toast({ variant: 'destructive', title: "No files selected", description: "Please add some photos to upload." });
-        return;
+      toast({ variant: 'destructive', title: 'No files selected', description: 'Please add some photos to upload.' });
+      return;
     }
     setIsUploading(true);
-    toast({ title: "Uploading...", description: `Uploading ${files.length} photos.` });
-    
-    let uploadedCount = 0;
-    files.forEach(file => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        if (e.target?.result) {
-          addPhoto({
-            src: e.target.result as string,
-            alt: file.name,
-            hint: 'guest upload'
-          });
-        }
-        uploadedCount++;
-        if (uploadedCount === files.length) {
-          setIsUploading(false);
-          setFiles([]);
-          toast({
-              title: "Upload Successful!",
-              description: "Thank you for sharing your photos.",
-              action: (
-                  <div className="p-1 rounded-full bg-green-500">
-                      <CheckCircle className="h-5 w-5 text-white" />
-                  </div>
-              ),
-          });
-        }
-      };
-      reader.onerror = () => {
-        uploadedCount++;
-        if (uploadedCount === files.length) {
-           setIsUploading(false);
-        }
-        toast({ variant: "destructive", title: "Upload Failed", description: `Could not upload ${file.name}.` });
-      }
-      reader.readAsDataURL(file);
+    toast({ title: 'Uploading...', description: `Uploading ${files.length} photos.` });
+
+    const uploadPromises = files.map(file => {
+      return new Promise<void>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          try {
+            if (e.target?.result) {
+              await addPhoto({
+                src: e.target.result as string,
+                alt: file.name,
+                hint: 'guest upload',
+              });
+            }
+            resolve();
+          } catch (error) {
+            reject(error);
+          }
+        };
+        reader.onerror = (error) => {
+            toast({ variant: 'destructive', title: 'Upload Failed', description: `Could not upload ${file.name}.` });
+            reject(error);
+        };
+        reader.readAsDataURL(file);
+      });
     });
+
+    try {
+        await Promise.all(uploadPromises);
+        setFiles([]);
+        toast({
+            title: 'Upload Successful!',
+            description: 'Thank you for sharing your photos.',
+            action: (
+                <div className="p-1 rounded-full bg-green-500">
+                    <CheckCircle className="h-5 w-5 text-white" />
+                </div>
+            ),
+        });
+    } catch (error) {
+        console.error("Error uploading files: ", error);
+        toast({ variant: 'destructive', title: 'Upload Error', description: 'Some photos could not be uploaded.' });
+    } finally {
+        setIsUploading(false);
+    }
   };
   
   const limitReached = !isPremium && (photos.length) >= FREE_TIER_LIMIT;

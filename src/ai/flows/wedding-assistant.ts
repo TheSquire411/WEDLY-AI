@@ -1,6 +1,4 @@
 
-'use server';
-
 /**
  * @fileOverview A conversational AI wedding assistant that can answer questions about the user's wedding plan.
  *
@@ -36,7 +34,7 @@ const getBudgetStatus = ai.defineTool(
     const expensesSnapshot = await expensesCollectionRef.where('paid', '==', true).get();
 
     const totalBudget = budgetDoc.exists ? (budgetDoc.data()?.total || 0) : 0;
-    const totalSpent = expensesSnapshot.docs.reduce((sum, doc) => sum + doc.data().actual, 0);
+    const totalSpent = budgetDoc.exists ? (budgetDoc.data()?.spent || 0) : 0;
     const remainingBudget = totalBudget - totalSpent;
 
     return { totalBudget, totalSpent, remainingBudget };
@@ -138,7 +136,7 @@ const weddingAssistantFlow = ai.defineFlow(
   async (input) => {
     try {
         const llmResponse = await prompt(input);
-        const answer = ll.output?.answer;
+        const answer = llmResponse.output?.answer;
 
         if (answer) {
             return { answer };

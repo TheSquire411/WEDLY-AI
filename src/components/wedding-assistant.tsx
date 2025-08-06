@@ -5,7 +5,6 @@ import { useState, useRef, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { askWeddingAssistant } from '@/ai/flows/wedding-assistant';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -59,19 +58,29 @@ export function WeddingAssistant() {
     }
 
     setIsLoading(true);
-    setMessages(prev => [...prev, { role: 'user', text: values.question }]);
+    const question = values.question;
+    setMessages(prev => [...prev, { role: 'user', text: question }]);
     form.reset();
 
     try {
-      const result = await askWeddingAssistant({question: values.question, userId: user.uid });
-      setMessages(prev => [...prev, { role: 'assistant', text: result.answer }]);
-    } catch (error) {
-      console.error('AI Assistant Error:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'The assistant is currently unavailable. Please try again later.',
+      const response = await fetch('/api/wedding-assistant', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ question: question, userId: user.uid }),
       });
+
+      if (!response.ok) {
+        throw new Error('The assistant is currently unavailable. Please try again later.');
+      }
+      
+      const result = await response.json();
+      setMessages(prev => [...prev, { role: 'assistant', text: result.answer }]);
+
+    } catch (error: any) {
+      console.error('AI Assistant Error:', error);
+      setMessages(prev => [...prev, { role: 'assistant', text: error.message || 'The assistant is currently unavailable. Please try again later.' }]);
     } finally {
       setIsLoading(false);
     }

@@ -31,8 +31,8 @@ export function Hero() {
                 src="https://images.unsplash.com/reserve/xd45Y326SvKzSR3Nanc8_MRJ_8125-1.jpg?q=80&w=1469&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
                 alt="A beautiful bouquet of wedding flowers"
                 data-ai-hint="wedding bouquet"
-                width={1600}
-                height={400}
+                width={1200}
+                height={300}
                 className="rounded-xl shadow-2xl ring-1 ring-gray-900/10 object-cover"
                 priority
             />

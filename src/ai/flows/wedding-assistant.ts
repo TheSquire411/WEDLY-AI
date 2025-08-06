@@ -117,7 +117,7 @@ export async function askWeddingAssistant(input: WeddingAssistantInput): Promise
 const prompt = ai.definePrompt({
     name: 'weddingAssistantPrompt',
     system: `You are a helpful and friendly wedding planning assistant. Your name is Welly.
-Use the available tools to answer the user's questions about their wedding plan.
+Use the available tools to answer the user's questions about their wedding plan based on their user ID.
 Provide clear, concise, and friendly answers.
 If you don't have the information, say so politely.
 Always refer to yourself in the first person (e.g., "I can help with that!").
@@ -125,8 +125,7 @@ When asked a question, you must call the appropriate tool with the userId provid
     tools: [getBudgetStatus, getGuestListSummary, getUpcomingTasks],
     input: { schema: WeddingAssistantInputSchema },
     output: { schema: WeddingAssistantOutputSchema },
-    prompt: `The user's question is: {{{question}}}
-The user's ID is: {{{userId}}}`
+    prompt: `The user's question is: {{{question}}}. The user's ID is: {{{userId}}}.`
 });
 
 

@@ -28,7 +28,7 @@ export function Hero() {
         </div>
         <div className="mt-12">
             <Image 
-                src="https://storage.googleapis.com/aip-dev-images-us-central1/public/wedly-hero-bouquet.jpg"
+                src="https://images.unsplash.com/reserve/xd45Y326SvKzSR3Nanc8_MRJ_8125-1.jpg?q=80&w=1469&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
                 alt="A beautiful bouquet of wedding flowers"
                 data-ai-hint="wedding bouquet"
                 width={1200}

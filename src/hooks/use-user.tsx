@@ -14,7 +14,7 @@ import {
     updateProfile,
     type User as FirebaseUser
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, onSnapshot } from 'firebase/firestore';
+import { doc, setDoc, getDoc, onSnapshot, writeBatch } from 'firebase/firestore';
 
 export interface UserData {
     uid: string;
@@ -38,6 +38,18 @@ interface UserContextType {
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
+const initializeNewUserData = async (uid: string, userData: Omit<UserData, 'uid'|'email'>) => {
+    const batch = writeBatch(db);
+    const userDocRef = doc(db, 'users', uid);
+    batch.set(userDocRef, userData);
+
+    const budgetSummaryRef = doc(db, 'users', uid, 'budget', 'summary');
+    batch.set(budgetSummaryRef, { total: 20000, spent: 0 });
+
+    await batch.commit();
+}
+
+
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<UserData | null>(null);
     const [loading, setLoading] = useState(true);
@@ -48,30 +60,15 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 if (firebaseUser) {
                     const userDocRef = doc(db, 'users', firebaseUser.uid);
                     
-                    // Set up a real-time listener for the user document
                     const unsubscribeDoc = onSnapshot(userDocRef, (userDoc) => {
                         if (userDoc.exists()) {
                             setUser({ ...userDoc.data(), uid: firebaseUser.uid, email: firebaseUser.email } as UserData);
-                        } else {
-                            // This case handles a theoretical scenario where auth exists but doc doesn't.
-                            // The sign-up/sign-in logic should prevent this.
-                             const displayName = firebaseUser.displayName || "Jane,John";
-                            const [name1, name2] = displayName.includes(',') ? displayName.split(',') : [displayName, 'Partner'];
-
-                            const newUser: Omit<UserData, 'uid' | 'email'> = {
-                                name1,
-                                name2,
-                                photoURL: firebaseUser.photoURL,
-                                premium: false,
-                            }
-                            setDoc(userDocRef, newUser).then(() => {
-                                setUser({ ...newUser, uid: firebaseUser.uid, email: firebaseUser.email });
-                            });
                         }
+                        // If doc doesn't exist, sign-in/sign-up logic will create it.
+                        // We don't need to handle it here to avoid race conditions.
                         setLoading(false);
                     });
                     
-                    // Return the unsubscribe function for the document listener
                     return () => unsubscribeDoc();
 
                 } else {
@@ -85,13 +82,12 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
         });
 
-        // Return the unsubscribe function for the auth listener
         return () => unsubscribeAuth();
     }, []);
 
     const getIdToken = async (): Promise<string | null> => {
         if (!auth.currentUser) return null;
-        return await auth.currentUser.getIdToken(true); // Force refresh
+        return await auth.currentUser.getIdToken(true);
     };
 
     const signOutUser = async () => {
@@ -107,16 +103,14 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
             displayName: `${name1},${name2}`
         });
 
-        const userData = {
-            email,
+        const userData: Omit<UserData, 'uid' | 'email'> = {
             name1,
             name2,
             photoURL: firebaseUser.photoURL,
             premium: false,
         };
-        await setDoc(doc(db, "users", firebaseUser.uid), userData);
+        await initializeNewUserData(firebaseUser.uid, userData);
         
-        // No need to setUser here, onAuthStateChanged listener will handle it.
         return userCredential;
     };
     
@@ -129,7 +123,6 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const result = await signInWithPopup(auth, provider);
         const firebaseUser = result.user;
 
-        // Check if user already exists
         const userDocRef = doc(db, 'users', firebaseUser.uid);
         const userDoc = await getDoc(userDocRef);
 
@@ -142,7 +135,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 photoURL: firebaseUser.photoURL,
                 premium: false,
              };
-             await setDoc(userDocRef, userData);
+             await initializeNewUserData(firebaseUser.uid, userData);
         }
         return result;
     };

@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { db } from '@/lib/firebase';
-import { collection, doc, onSnapshot, updateDoc, addDoc, Timestamp } from 'firebase/firestore';
+import { collection, doc, onSnapshot, updateDoc, addDoc, Timestamp, runTransaction } from 'firebase/firestore';
 import { budgetAllocationSuggestions } from '@/ai/flows/budget-allocation-suggestions';
 import { Button } from '@/components/ui/button';
 import {
@@ -69,7 +69,8 @@ export function BudgetTracker() {
   const [suggestions, setSuggestions] = useState<BudgetItem[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
-  const [totalBudget, setTotalBudget] = useState(20000);
+  const [totalBudget, setTotalBudget] = useState(0);
+  const [totalSpent, setTotalSpent] = useState(0);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [isDataLoading, setIsDataLoading] = useState(true);
 
@@ -107,7 +108,9 @@ export function BudgetTracker() {
 
     const unsubscribeBudget = onSnapshot(budgetDocRef, (doc) => {
         if (doc.exists()) {
-            setTotalBudget(doc.data().total || 20000);
+            const data = doc.data();
+            setTotalBudget(data.total || 0);
+            setTotalSpent(data.spent || 0);
         }
     });
     
@@ -130,10 +133,6 @@ export function BudgetTracker() {
     }
   }, [budgetDocRef, expensesCollectionRef]);
 
-
-  const totalSpent = useMemo(() => {
-    return expenses.filter(e => e.paid).reduce((sum, expense) => sum + expense.actual, 0);
-  }, [expenses]);
 
   const remainingBudget = useMemo(() => totalBudget - totalSpent, [totalBudget, totalSpent]);
   const spentPercentage = useMemo(() => (totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0), [totalBudget, totalSpent]);
@@ -169,12 +168,26 @@ export function BudgetTracker() {
     }
   }
 
-  const togglePaidStatus = async (id: string) => {
-    if (!user) return;
+  const togglePaidStatus = async (id: string, currentStatus: boolean, amount: number) => {
+    if (!user || !budgetDocRef) return;
     const expenseDocRef = doc(db, 'users', user.uid, 'expenses', id);
-    const expense = expenses.find(e => e.id === id);
-    if(expense) {
-        await updateDoc(expenseDocRef, { paid: !expense.paid });
+    
+    try {
+        await runTransaction(db, async (transaction) => {
+            const budgetSummaryDoc = await transaction.get(budgetDocRef);
+            if (!budgetSummaryDoc.exists()) {
+                throw "Budget summary does not exist!";
+            }
+            const newSpent = currentStatus 
+                ? budgetSummaryDoc.data().spent - amount // un-paying
+                : budgetSummaryDoc.data().spent + amount; // paying
+            
+            transaction.update(budgetDocRef, { spent: newSpent });
+            transaction.update(expenseDocRef, { paid: !currentStatus });
+        });
+    } catch (e) {
+        console.error("Transaction failed: ", e);
+        toast({ variant: 'destructive', title: 'Error', description: 'Could not update payment status.'});
     }
   };
   
@@ -298,7 +311,7 @@ export function BudgetTracker() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => togglePaidStatus(expense.id)}
+                          onClick={() => togglePaidStatus(expense.id, expense.paid, expense.actual)}
                           disabled={expense.paid}
                         >
                           <CheckCircle2 className="mr-2 h-4 w-4"/>

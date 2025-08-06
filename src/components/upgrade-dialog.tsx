@@ -12,7 +12,10 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { CheckCircle2, Gem } from 'lucide-react';
+import { CheckCircle2, Gem, Loader2 } from 'lucide-react';
+import React from 'react';
+import { redirectToCheckout } from '@/lib/stripe';
+import { useToast } from './ui/use-toast';
 
 const proFeatures = [
     "AI Vow Generator",
@@ -24,13 +27,30 @@ const proFeatures = [
 
 export function UpgradeDialog() {
   const { isDialogOpen, closeDialog } = useSubscription();
+  const [isLoading, setIsLoading] = React.useState(false);
+  const { toast } = useToast();
 
-  const handleUpgradeClick = () => {
-    // In a real application, this would trigger the Stripe checkout flow.
-    // 1. Call a backend endpoint to create a Stripe Checkout Session.
-    // 2. Redirect the user to the Stripe checkout URL.
-    console.log("Stripe checkout process would start here.");
-    closeDialog();
+
+  const handleUpgradeClick = async () => {
+    setIsLoading(true);
+    try {
+      const error = await redirectToCheckout();
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: error,
+        });
+      }
+    } catch (error) {
+       toast({
+          variant: "destructive",
+          title: "Error",
+          description: "An unexpected error occurred. Please try again.",
+        });
+    } finally {
+        setIsLoading(false);
+    }
   }
 
   return (
@@ -57,7 +77,8 @@ export function UpgradeDialog() {
             </ul>
         </div>
         <DialogFooter>
-          <Button onClick={handleUpgradeClick} className="w-full" size="lg">
+          <Button onClick={handleUpgradeClick} disabled={isLoading} className="w-full" size="lg">
+            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
             Upgrade Now for $49
           </Button>
         </DialogFooter>

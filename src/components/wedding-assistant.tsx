@@ -15,6 +15,7 @@ import { Loader2, Bot, Send } from 'lucide-react';
 import { ScrollArea } from './ui/scroll-area';
 import { Avatar, AvatarFallback } from './ui/avatar';
 import { cn } from '@/lib/utils';
+import { useUser } from '@/hooks/use-user';
 
 const formSchema = z.object({
   question: z.string().min(5, { message: "Please ask a complete question." }),
@@ -29,6 +30,7 @@ export function WeddingAssistant() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { user } = useUser();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
 
@@ -47,12 +49,21 @@ export function WeddingAssistant() {
   }, [messages]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!user) {
+        toast({
+            variant: 'destructive',
+            title: 'Not Logged In',
+            description: 'You need to be logged in to use the assistant.',
+        });
+        return;
+    }
+
     setIsLoading(true);
     setMessages(prev => [...prev, { role: 'user', text: values.question }]);
     form.reset();
 
     try {
-      const result = await askWeddingAssistant({question: values.question});
+      const result = await askWeddingAssistant({question: values.question, userId: user.uid });
       setMessages(prev => [...prev, { role: 'assistant', text: result.answer }]);
     } catch (error) {
       console.error('AI Assistant Error:', error);

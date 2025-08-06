@@ -10,66 +10,35 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-
-// Mock data stores - in a real app, this would come from a database.
-const budgetData = {
-  totalBudget: 20000,
-  expenses: [
-    { category: 'Venue', actual: 5500, paid: true },
-    { category: 'Catering', actual: 5800, paid: true },
-    { category: 'Photography', actual: 2500, paid: true },
-    { category: 'Flowers', actual: 1200, paid: false },
-    { category: 'Attire', actual: 2750, paid: true },
-    { category: 'Entertainment', actual: 3000, paid: false },
-  ],
-};
-
-const guestData = {
-  guests: [
-    { name: 'Alice Johnson', rsvp: 'Confirmed' },
-    { name: 'Bob Williams', rsvp: 'Confirmed' },
-    { name: 'Charlie Brown', rsvp: 'Pending' },
-    { name: 'Diana Miller', rsvp: 'Declined' },
-    { name: 'Ethan Davis', rsvp: 'Confirmed' },
-    { name: 'Fiona Garcia', rsvp: 'Confirmed' },
-    { name: 'George Rodriguez', rsvp: 'Pending' },
-    { name: 'Hannah Smith', rsvp: 'Confirmed' },
-  ]
-};
-
-const taskData = {
-    tasks: [
-        { id: '4', title: 'Hire a caterer', completed: false },
-        { id: '5', title: 'Send save-the-dates', completed: false },
-        { id: '7', title: 'Book entertainment', completed: false },
-        { id: '8', title: 'Order invitations', completed: false },
-        { id: '9', title: 'Finalize menu and floral selections', completed: false },
-        { id: '10', title: 'Apply for marriage license', completed: false },
-        { id: '11', title: 'Confirm final details with vendors', completed: false },
-    ]
-};
-
+import { db } from '@/lib/firebase-admin';
+import { Timestamp } from 'firebase-admin/firestore';
 
 // Tool to get budget status
 const getBudgetStatus = ai.defineTool(
   {
     name: 'getBudgetStatus',
     description: 'Returns the current budget status, including total budget, amount spent, and remaining budget.',
-    inputSchema: z.object({}),
+    inputSchema: z.object({
+        userId: z.string().describe("The ID of the user to fetch data for.")
+    }),
     outputSchema: z.object({
       totalBudget: z.number(),
       totalSpent: z.number(),
       remainingBudget: z.number(),
     }),
   },
-  async () => {
-    const totalSpent = budgetData.expenses.filter(e => e.paid).reduce((sum, exp) => sum + exp.actual, 0);
-    const remainingBudget = budgetData.totalBudget - totalSpent;
-    return {
-      totalBudget: budgetData.totalBudget,
-      totalSpent,
-      remainingBudget,
-    };
+  async ({ userId }) => {
+    const budgetDocRef = db.collection('users').doc(userId).collection('budget').doc('summary');
+    const expensesCollectionRef = db.collection('users').doc(userId).collection('expenses');
+    
+    const budgetDoc = await budgetDocRef.get();
+    const expensesSnapshot = await expensesCollectionRef.where('paid', '==', true).get();
+
+    const totalBudget = budgetDoc.exists ? (budgetDoc.data()?.total || 0) : 0;
+    const totalSpent = expensesSnapshot.docs.reduce((sum, doc) => sum + doc.data().actual, 0);
+    const remainingBudget = totalBudget - totalSpent;
+
+    return { totalBudget, totalSpent, remainingBudget };
   }
 );
 
@@ -79,7 +48,9 @@ const getGuestListSummary = ai.defineTool(
     {
         name: 'getGuestListSummary',
         description: 'Returns a summary of the guest list, including RSVP counts.',
-        inputSchema: z.object({}),
+        inputSchema: z.object({
+            userId: z.string().describe("The ID of the user to fetch data for.")
+        }),
         outputSchema: z.object({
             totalGuests: z.number(),
             confirmed: z.number(),
@@ -87,12 +58,20 @@ const getGuestListSummary = ai.defineTool(
             declined: z.number(),
         })
     },
-    async () => {
-        const totalGuests = guestData.guests.length;
-        const confirmed = guestData.guests.filter(g => g.rsvp === 'Confirmed').length;
-        const pending = guestData.guests.filter(g => g.rsvp === 'Pending').length;
-        const declined = guestData.guests.filter(g => g.rsvp === 'Declined').length;
-        return { totalGuests, confirmed, pending, declined };
+    async ({ userId }) => {
+        const guestsCollectionRef = db.collection('users').doc(userId).collection('guests');
+        const confirmedSnapshot = await guestsCollectionRef.where('rsvp', '==', 'Confirmed').get();
+        const pendingSnapshot = await guestsCollectionRef.where('rsvp', '==', 'Pending').get();
+        const declinedSnapshot = await guestsCollectionRef.where('rsvp', '==', 'Declined').get();
+        
+        const totalGuests = confirmedSnapshot.size + pendingSnapshot.size + declinedSnapshot.size;
+
+        return { 
+            totalGuests, 
+            confirmed: confirmedSnapshot.size, 
+            pending: pendingSnapshot.size, 
+            declined: declinedSnapshot.size 
+        };
     }
 );
 
@@ -101,13 +80,17 @@ const getUpcomingTasks = ai.defineTool(
     {
         name: 'getUpcomingTasks',
         description: 'Returns a list of incomplete tasks.',
-        inputSchema: z.object({}),
+        inputSchema: z.object({
+            userId: z.string().describe("The ID of the user to fetch data for.")
+        }),
         outputSchema: z.object({
             upcomingTasks: z.array(z.object({ title: z.string() }))
         }),
     },
-    async () => {
-        const upcomingTasks = taskData.tasks.filter(t => !t.completed).map(t => ({title: t.title}));
+    async ({ userId }) => {
+        const tasksCollectionRef = db.collection('users').doc(userId).collection('tasks');
+        const tasksSnapshot = await tasksCollectionRef.where('completed', '==', false).get();
+        const upcomingTasks = tasksSnapshot.docs.map(doc => ({title: doc.data().title}));
         return { upcomingTasks };
     }
 )
@@ -115,6 +98,7 @@ const getUpcomingTasks = ai.defineTool(
 
 const WeddingAssistantInputSchema = z.object({
   question: z.string().describe('The user\'s question about their wedding plan.'),
+  userId: z.string().describe('The ID of the user asking the question.'),
 });
 export type WeddingAssistantInput = z.infer<typeof WeddingAssistantInputSchema>;
 
@@ -135,11 +119,13 @@ const prompt = ai.definePrompt({
 Use the available tools to answer the user's questions about their wedding plan.
 Provide clear, concise, and friendly answers.
 If you don't have the information, say so politely.
-Always refer to yourself in the first person (e.g., "I can help with that!").`,
+Always refer to yourself in the first person (e.g., "I can help with that!").
+When asked a question, you must call the appropriate tool with the userId provided in the input.`,
     tools: [getBudgetStatus, getGuestListSummary, getUpcomingTasks],
     input: { schema: WeddingAssistantInputSchema },
     output: { schema: WeddingAssistantOutputSchema },
-    prompt: `The user's question is: {{{question}}}`
+    prompt: `The user's question is: {{{question}}}
+The user's ID is: {{{userId}}}`
 });
 
 

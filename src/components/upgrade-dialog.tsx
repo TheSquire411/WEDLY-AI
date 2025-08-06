@@ -15,7 +15,7 @@ import { Badge } from './ui/badge';
 import { CheckCircle2, Gem, Loader2 } from 'lucide-react';
 import React from 'react';
 import { redirectToCheckout } from '@/lib/stripe';
-import { useToast } from './ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 const proFeatures = [
     "AI Vow Generator",

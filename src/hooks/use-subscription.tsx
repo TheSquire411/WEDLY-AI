@@ -1,13 +1,12 @@
 
 "use client";
 
-import { UpgradeDialog } from '@/components/upgrade-dialog';
 import React, { createContext, useContext, useState } from 'react';
+import { useUser } from './use-user';
 
 interface SubscriptionContextType {
   isPremium: boolean;
   isDialogOpen: boolean;
-  upgrade: () => void;
   openDialog: () => void;
   closeDialog: () => void;
 }
@@ -15,13 +14,10 @@ interface SubscriptionContextType {
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
 
 export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isPremium, setIsPremium] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { user } = useUser();
 
-  const upgrade = () => {
-    setIsPremium(true);
-    setIsDialogOpen(false);
-  };
+  const isPremium = !!user?.premium;
 
   const openDialog = () => setIsDialogOpen(true);
   const closeDialog = () => setIsDialogOpen(false);
@@ -30,7 +26,6 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const value = {
     isPremium,
     isDialogOpen,
-    upgrade,
     openDialog,
     closeDialog
   };

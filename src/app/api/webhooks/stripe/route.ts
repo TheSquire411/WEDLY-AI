@@ -1,21 +1,43 @@
 
 import { NextResponse } from 'next/server';
-// The other AI will need to import the Stripe library.
-// e.g. import Stripe from 'stripe';
+import Stripe from 'stripe';
+import { db } from '@/lib/firebase-admin'; // Using admin SDK for server-side database operations
+import { headers } from 'next/headers';
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
 export async function POST(request: Request) {
   try {
-    // This is where the other AI should add the logic to handle the Stripe webhook.
-    // 1. Get the request body and the 'stripe-signature' header.
-    // 2. Use `stripe.webhooks.constructEvent()` to verify the event came from Stripe.
-    //    - You will need the webhook signing secret from `process.env.STRIPE_WEBHOOK_SECRET`.
-    // 3. Handle the `checkout.session.completed` event.
-    //    - Get the `client_reference_id` (the user's ID) from the event object.
-    //    - Update the user's record in your Firestore database to mark them as 'premium'.
-    
-    // As a placeholder, this will log the request and return success.
-    console.log("Stripe webhook received, but no logic is implemented yet."); // The other AI should replace this logic.
-    
+    const body = await request.text();
+    const signature = headers().get('stripe-signature')!;
+
+    let event: Stripe.Event;
+
+    try {
+      event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+    } catch (err: any) {
+      console.error(`❌ Error message: ${err.message}`);
+      return new NextResponse(`Webhook Error: ${err.message}`, { status: 400 });
+    }
+
+    // Handle the checkout.session.completed event
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object as Stripe.Checkout.Session;
+
+      const userId = session.client_reference_id;
+
+      if (!userId) {
+        throw new Error('No user ID found in session.');
+      }
+      
+      // Update the user's record in Firestore to mark them as 'premium'
+      const userDocRef = db.collection('users').doc(userId);
+      await userDocRef.update({ premium: true });
+
+      console.log(`Successfully granted premium access to user: ${userId}`);
+    }
+
     return new NextResponse(JSON.stringify({ received: true }), { status: 200 });
     
   } catch (error: any) {

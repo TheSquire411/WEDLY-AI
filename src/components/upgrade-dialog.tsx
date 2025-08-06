@@ -16,6 +16,7 @@ import { CheckCircle2, Gem, Loader2 } from 'lucide-react';
 import React from 'react';
 import { redirectToCheckout } from '@/lib/stripe';
 import { useToast } from '@/hooks/use-toast';
+import { useUser } from '@/hooks/use-user';
 
 const proFeatures = [
     "AI Vow Generator",
@@ -29,12 +30,13 @@ export function UpgradeDialog() {
   const { isDialogOpen, closeDialog } = useSubscription();
   const [isLoading, setIsLoading] = React.useState(false);
   const { toast } = useToast();
+  const { getIdToken } = useUser();
 
 
   const handleUpgradeClick = async () => {
     setIsLoading(true);
     try {
-      const error = await redirectToCheckout();
+      const error = await redirectToCheckout(getIdToken);
       if (error) {
         toast({
           variant: "destructive",

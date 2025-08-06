@@ -14,19 +14,21 @@ import {
     updateProfile,
     type User as FirebaseUser
 } from 'firebase/auth';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, onSnapshot } from 'firebase/firestore';
 
-interface UserData {
+export interface UserData {
     uid: string;
     email: string | null;
     name1: string;
     name2: string;
     photoURL?: string | null;
+    premium?: boolean;
 }
 
 interface UserContextType {
   user: UserData | null;
   loading: boolean;
+  getIdToken: () => Promise<string | null>;
   signOutUser: () => Promise<void>;
   signUp: (email:string, password:string, name1:string, name2:string) => Promise<any>;
   signInWithEmail: (email:string, password:string) => Promise<any>;
@@ -41,44 +43,56 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+        const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
             try {
                 if (firebaseUser) {
                     const userDocRef = doc(db, 'users', firebaseUser.uid);
-                    const userDoc = await getDoc(userDocRef);
                     
-                    if (userDoc.exists()) {
-                        setUser({ ...userDoc.data(), uid: firebaseUser.uid, email: firebaseUser.email } as UserData);
-                    } else {
-                        // This block runs for first-time Google sign-ins
-                        const displayName = firebaseUser.displayName || "Jane,John";
-                        const [name1, name2] = displayName.includes(',') ? displayName.split(',') : [displayName, 'Partner'];
+                    // Set up a real-time listener for the user document
+                    const unsubscribeDoc = onSnapshot(userDocRef, (userDoc) => {
+                        if (userDoc.exists()) {
+                            setUser({ ...userDoc.data(), uid: firebaseUser.uid, email: firebaseUser.email } as UserData);
+                        } else {
+                            // This case handles a theoretical scenario where auth exists but doc doesn't.
+                            // The sign-up/sign-in logic should prevent this.
+                             const displayName = firebaseUser.displayName || "Jane,John";
+                            const [name1, name2] = displayName.includes(',') ? displayName.split(',') : [displayName, 'Partner'];
 
-                        const newUser: UserData = {
-                            uid: firebaseUser.uid,
-                            email: firebaseUser.email,
-                            name1,
-                            name2,
-                            photoURL: firebaseUser.photoURL,
+                            const newUser: Omit<UserData, 'uid' | 'email'> = {
+                                name1,
+                                name2,
+                                photoURL: firebaseUser.photoURL,
+                                premium: false,
+                            }
+                            setDoc(userDocRef, newUser).then(() => {
+                                setUser({ ...newUser, uid: firebaseUser.uid, email: firebaseUser.email });
+                            });
                         }
-                        await setDoc(userDocRef, newUser);
-                        setUser(newUser);
-                    }
+                        setLoading(false);
+                    });
+                    
+                    // Return the unsubscribe function for the document listener
+                    return () => unsubscribeDoc();
+
                 } else {
                     setUser(null);
+                    setLoading(false);
                 }
             } catch (error) {
                 console.error("Error during auth state change: ", error);
-                // If there's an error, we should still ensure the user is not considered logged in
                 setUser(null);
-            } finally {
-                // This will run regardless of whether there was an error or not
                 setLoading(false);
             }
         });
 
-        return () => unsubscribe();
+        // Return the unsubscribe function for the auth listener
+        return () => unsubscribeAuth();
     }, []);
+
+    const getIdToken = async (): Promise<string | null> => {
+        if (!auth.currentUser) return null;
+        return await auth.currentUser.getIdToken(true); // Force refresh
+    };
 
     const signOutUser = async () => {
         await signOut(auth);
@@ -94,14 +108,15 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
 
         const userData = {
-            uid: firebaseUser.uid,
             email,
             name1,
             name2,
             photoURL: firebaseUser.photoURL,
+            premium: false,
         };
         await setDoc(doc(db, "users", firebaseUser.uid), userData);
-        setUser(userData as UserData);
+        
+        // No need to setUser here, onAuthStateChanged listener will handle it.
         return userCredential;
     };
     
@@ -111,7 +126,25 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const signInWithGoogle = async () => {
         const provider = new GoogleAuthProvider();
-        return signInWithPopup(auth, provider);
+        const result = await signInWithPopup(auth, provider);
+        const firebaseUser = result.user;
+
+        // Check if user already exists
+        const userDocRef = doc(db, 'users', firebaseUser.uid);
+        const userDoc = await getDoc(userDocRef);
+
+        if (!userDoc.exists()) {
+             const displayName = firebaseUser.displayName || "Jane,John";
+             const [name1, name2] = displayName.includes(',') ? displayName.split(',') : [displayName, 'Partner'];
+             const userData: Omit<UserData, 'uid' | 'email'> = {
+                name1,
+                name2,
+                photoURL: firebaseUser.photoURL,
+                premium: false,
+             };
+             await setDoc(userDocRef, userData);
+        }
+        return result;
     };
     
     const resetPassword = (email: string) => {
@@ -121,6 +154,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const value = {
     user,
     loading,
+    getIdToken,
     signOutUser,
     signUp,
     signInWithEmail,

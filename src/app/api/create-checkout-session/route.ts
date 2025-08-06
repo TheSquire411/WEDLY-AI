@@ -1,23 +1,51 @@
 
 import { NextResponse } from 'next/server';
-// The other AI will need to import the Stripe library and initialize it with the secret key.
-// e.g. import Stripe from 'stripe';
-// const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+import Stripe from 'stripe';
+import { auth } from '@/lib/firebase-admin'; // Using admin SDK for server-side verification
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
 export async function POST(request: Request) {
   try {
-    // This is where the other AI should add the logic to create a Stripe Checkout Session.
-    // 1. Get the current user's ID (this will require integrating with your auth provider, e.g., Firebase Auth).
-    // 2. Use `stripe.checkout.sessions.create()` to create a session.
-    //    - Pass the `price` from `process.env.STRIPE_PRICE_ID`.
-    //    - Set the `mode` to `'payment'`.
-    //    - Define `success_url` and `cancel_url` (e.g., `${request.headers.get('origin')}/?success=true`).
-    //    - Pass the user's ID in the `client_reference_id` so you know who paid in the webhook.
-    
-    // As a placeholder, this will return a mock session ID.
-    const sessionId = 'mock_session_id_replace_with_real_logic'; // The other AI must replace this.
+    const authorization = request.headers.get('Authorization');
+    if (!authorization?.startsWith('Bearer ')) {
+        return new NextResponse('Unauthorized', { status: 401 });
+    }
+    const idToken = authorization.split('Bearer ')[1];
+    const decodedToken = await auth.verifyIdToken(idToken);
+    const userId = decodedToken.uid;
 
-    return NextResponse.json({ sessionId });
+    if (!userId) {
+        return new NextResponse('User not found', { status: 404 });
+    }
+
+    const priceId = process.env.STRIPE_PRICE_ID;
+    if (!priceId) {
+        throw new Error('Stripe Price ID is not configured.');
+    }
+    
+    const origin = request.headers.get('origin') || 'http://localhost:3000';
+
+    // Create a checkout session
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price: priceId,
+          quantity: 1,
+        },
+      ],
+      mode: 'payment',
+      success_url: `${origin}/?payment_success=true`,
+      cancel_url: `${origin}/?payment_cancelled=true`,
+      client_reference_id: userId, // Pass the user's ID to the session
+    });
+
+    if (!session.id) {
+        throw new Error("Could not create Stripe session");
+    }
+
+    return NextResponse.json({ sessionId: session.id });
 
   } catch (error: any) {
     console.error("Error creating Stripe session:", error);

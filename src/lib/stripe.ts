@@ -8,11 +8,9 @@ let stripePromise: Promise<Stripe | null>;
 
 const getStripe = () => {
   if (!stripePromise) {
-    // The other AI will need to fill in the publishable key.
-    // It is safe to expose this key in the browser.
     const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
     if (!publishableKey) {
-        throw new Error("Stripe publishable key is not set in .env");
+        throw new Error("Stripe publishable key is not set in .env.local");
     }
     stripePromise = loadStripe(publishableKey);
   }
@@ -20,23 +18,28 @@ const getStripe = () => {
 };
 
 
-export async function redirectToCheckout(): Promise<string | null> {
+export async function redirectToCheckout(getIdToken: () => Promise<string | null>): Promise<string | null> {
     try {
-        // 1. Create a checkout session on your backend.
-        // The other AI will implement this API route.
+        const idToken = await getIdToken();
+        if (!idToken) {
+            throw new Error("User not authenticated.");
+        }
+
         const response = await fetch('/api/create-checkout-session', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${idToken}`,
+             },
         });
 
         if (!response.ok) {
-            const { error } = await response.json();
-            throw new Error(error || "Failed to create checkout session.");
+            const body = await response.text();
+            throw new Error(body || "Failed to create checkout session.");
         }
 
         const { sessionId } = await response.json();
         
-        // 2. Redirect to Stripe checkout.
         const stripe = await getStripe();
         if (!stripe) {
             throw new Error('Stripe.js has not loaded yet.');

@@ -1,4 +1,6 @@
 
+'use server';
+
 /**
  * @fileOverview A conversational AI wedding assistant that can answer questions about the user's wedding plan.
  *
@@ -28,10 +30,8 @@ const getBudgetStatus = ai.defineTool(
   },
   async ({ userId }) => {
     const budgetDocRef = db.collection('users').doc(userId).collection('budget').doc('summary');
-    const expensesCollectionRef = db.collection('users').doc(userId).collection('expenses');
     
     const budgetDoc = await budgetDocRef.get();
-    const expensesSnapshot = await expensesCollectionRef.where('paid', '==', true).get();
 
     const totalBudget = budgetDoc.exists ? (budgetDoc.data()?.total || 0) : 0;
     const totalSpent = budgetDoc.exists ? (budgetDoc.data()?.spent || 0) : 0;
@@ -115,15 +115,15 @@ export async function askWeddingAssistant(input: WeddingAssistantInput): Promise
 const prompt = ai.definePrompt({
     name: 'weddingAssistantPrompt',
     system: `You are a helpful and friendly wedding planning assistant. Your name is Welly.
-Use the available tools to answer the user's questions about their wedding plan based on their user ID.
+Use the available tools to answer the user's questions about their wedding plan.
+To use the tools, you MUST get the user's ID from the 'userId' field in the input. Do not ask the user for their ID.
 Provide clear, concise, and friendly answers.
 If you don't have the information, say so politely.
-Always refer to yourself in the first person (e.g., "I can help with that!").
-When asked a question, you must call the appropriate tool with the userId provided in the input.`,
+Always refer to yourself in the first person (e.g., "I can help with that!").`,
     tools: [getBudgetStatus, getGuestListSummary, getUpcomingTasks],
     input: { schema: WeddingAssistantInputSchema },
     output: { schema: WeddingAssistantOutputSchema },
-    prompt: `The user's question is: {{{question}}}. The user's ID is: {{{userId}}}.`
+    prompt: `The user's question is: {{{question}}}.`
 });
 
 
@@ -134,23 +134,20 @@ const weddingAssistantFlow = ai.defineFlow(
     outputSchema: WeddingAssistantOutputSchema,
   },
   async (input) => {
-    try {
-        const llmResponse = await prompt(input);
-        const answer = llmResponse.output?.answer;
+    const llmResponse = await prompt(input);
+    const answer = llmResponse.output?.answer;
 
-        if (answer) {
-            return { answer };
-        } else {
-             // Fallback if the structured output is empty
-            const rawTextResponse = llmResponse.text;
-            if (rawTextResponse) {
-                return { answer: rawTextResponse };
-            }
-            return { answer: "I'm not sure how to answer that. Can you try asking another way?" };
-        }
-    } catch (error) {
-        console.error("Error in wedding assistant flow:", error);
-        return { answer: "Sorry, I encountered an error while trying to respond. Please try again." };
+    if (answer) {
+        return { answer };
     }
+
+    // Fallback if the structured output is empty
+    const rawTextResponse = ll.mResponse.text;
+    if (rawTextResponse) {
+        return { answer: rawTextResponse };
+    }
+
+    // Final fallback
+    return { answer: "Sorry, I encountered an error while trying to respond. Please try again." };
   }
 );

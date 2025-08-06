@@ -2,7 +2,7 @@ import { MetadataRoute } from 'next'
 import { getBlogPosts } from './blog/utils';
  
 export default function sitemap(): MetadataRoute.Sitemap {
-  const siteUrl = 'https://your-domain.com';
+  const siteUrl = 'https://wedly.minimal.app';
 
   const posts = getBlogPosts().map((post) => ({
     url: `${siteUrl}/blog/${post.slug}`,

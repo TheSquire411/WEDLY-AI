@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { db } from '@/lib/firebase';
-import { collection, doc, onSnapshot, updateDoc, addDoc, Timestamp, runTransaction } from 'firebase/firestore';
+import { collection, doc, onSnapshot, updateDoc, addDoc, Timestamp, runTransaction, setDoc } from 'firebase/firestore';
 import { budgetAllocationSuggestions } from '@/ai/flows/budget-allocation-suggestions';
 import { Button } from '@/components/ui/button';
 import {
@@ -221,7 +221,7 @@ export function BudgetTracker() {
   const handleBudgetChange = async (newTotal: number) => {
       setTotalBudget(newTotal);
       if(budgetDocRef) {
-          await updateDoc(budgetDocRef, { total: newTotal }, { merge: true });
+          await setDoc(budgetDocRef, { total: newTotal }, { merge: true });
       }
   }
 

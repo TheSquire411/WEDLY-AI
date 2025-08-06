@@ -38,8 +38,9 @@ interface UserContextType {
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
-const initializeNewUserData = async (uid: string, userData: Omit<UserData, 'uid'|'email'>) => {
+const initializeNewUserData = async (uid: string, userData: Omit<UserData, 'uid' | 'email'>) => {
     const batch = writeBatch(db);
+    
     const userDocRef = doc(db, 'users', uid);
     batch.set(userDocRef, userData);
 
@@ -64,8 +65,6 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
                         if (userDoc.exists()) {
                             setUser({ ...userDoc.data(), uid: firebaseUser.uid, email: firebaseUser.email } as UserData);
                         }
-                        // If doc doesn't exist, sign-in/sign-up logic will create it.
-                        // We don't need to handle it here to avoid race conditions.
                         setLoading(false);
                     });
                     

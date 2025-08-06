@@ -61,7 +61,7 @@ export default function LoginPage() {
 
   React.useEffect(() => {
     if (user) {
-        router.push('/');
+        router.push('/dashboard');
     }
   }, [user, router]);
 
@@ -69,7 +69,7 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       await signInWithEmail(values.email, values.password);
-      router.push('/');
+      router.push('/dashboard');
     } catch (error: any) {
       toast({
         variant: 'destructive',
@@ -85,7 +85,7 @@ export default function LoginPage() {
       setIsLoading(true);
       try {
           await signInWithGoogle();
-          router.push('/');
+          router.push('/dashboard');
       } catch (error: any) {
           toast({
               variant: 'destructive',
@@ -176,4 +176,3 @@ export default function LoginPage() {
     </div>
   );
 }
-

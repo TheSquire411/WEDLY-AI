@@ -65,7 +65,7 @@ export default function SignUpPage() {
 
   React.useEffect(() => {
     if (user) {
-        router.push('/');
+        router.push('/dashboard');
     }
   }, [user, router]);
 
@@ -73,7 +73,7 @@ export default function SignUpPage() {
     setIsLoading(true);
     try {
       await signUp(values.email, values.password, values.name1, values.name2);
-      router.push('/');
+      router.push('/dashboard');
     } catch (error: any) {
       toast({
         variant: 'destructive',
@@ -89,7 +89,7 @@ export default function SignUpPage() {
       setIsLoading(true);
       try {
           await signInWithGoogle();
-          router.push('/');
+          router.push('/dashboard');
       } catch (error: any) {
           toast({
               variant: 'destructive',

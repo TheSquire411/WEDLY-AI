@@ -2,7 +2,7 @@
 title: '10 Tips for a Stress-Free Wedding Day'
 date: '2024-07-15'
 excerpt: 'Your wedding day should be about joy, not stress. Follow these 10 tips to ensure everything runs smoothly, leaving you to focus on what truly matters: celebrating your love.'
-image: 'https://placehold.co/600x400.png'
+image: 'https://images.unsplash.com/photo-1630673460627-84fa90056599?q=80&w=774&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3'
 image_alt: 'A calm bride sipping tea before her wedding'
 image_hint: 'bride relaxing'
 ---

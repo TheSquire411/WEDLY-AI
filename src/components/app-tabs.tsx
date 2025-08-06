@@ -5,13 +5,14 @@ import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DashboardOverview } from '@/components/dashboard-overview';
 import { BudgetTracker, type Expense } from '@/components/budget-tracker';
-import { TaskManager, type Task } from '@/components/task-manager';
+import { TaskManager } from '@/components/task-manager';
 import { GuestList } from '@/components/guest-list';
 import { VisionBoard } from '@/components/vision-board';
 import { SeatingChart } from '@/components/seating-chart';
 import { PhotoAlbum } from '@/components/photo-album';
 import { LayoutDashboard, CircleDollarSign, ListChecks, Users, GalleryHorizontal, Armchair, Camera } from 'lucide-react';
 import { useGuests } from '@/hooks/use-guests';
+import { useTasks } from '@/hooks/use-tasks';
 
 const initialExpenses = [
   { id: '1', category: 'Venue', estimated: 5000, actual: 5500, vendor: 'Sunshine Meadows', dueDate: new Date('2024-10-01'), paid: true, reminder: false },
@@ -22,25 +23,11 @@ const initialExpenses = [
   { id: '6', category: 'Entertainment', estimated: 3000, actual: 3000, vendor: 'Groove Band', dueDate: new Date('2024-11-10'), paid: false, reminder: true },
 ];
 
-const initialTasks = [
-  { id: '1', title: 'Set a date and book venue', dueDate: '12 months out', completed: true },
-  { id: '2', title: 'Finalize guest list', dueDate: '10 months out', completed: true },
-  { id: '3', title: 'Book photographer and videographer', dueDate: '9 months out', completed: true },
-  { id: '4', title: 'Hire a caterer', dueDate: '8 months out', completed: false },
-  { id: '5', title: 'Send save-the-dates', dueDate: '6-8 months out', completed: false },
-  { id: '6', title: 'Purchase wedding attire', dueDate: '6 months out', completed: true },
-  { id: '7', title: 'Book entertainment', dueDate: '5 months out', completed: false },
-  { id: '8', title: 'Order invitations', dueDate: '4 months out', completed: false },
-  { id: '9', title: 'Finalize menu and floral selections', dueDate: '3 months out', completed: false },
-  { id: '10', title: 'Apply for marriage license', dueDate: '1 month out', completed: false },
-  { id: '11', title: 'Confirm final details with vendors', dueDate: '1-2 weeks out', completed: false },
-];
-
 export function AppTabs() {
   const [totalBudget, setTotalBudget] = useState(20000);
   const [expenses, setExpenses] = useState<Expense[]>(initialExpenses);
-  const [tasks, setTasks] = useState<Task[]>(initialTasks);
   const { guests } = useGuests();
+  const { tasks } = useTasks();
 
   const budgetSummary = {
     total: totalBudget,
@@ -113,7 +100,7 @@ export function AppTabs() {
         />
       </TabsContent>
       <TabsContent value="tasks" className="mt-6">
-        <TaskManager tasks={tasks} setTasks={setTasks} />
+        <TaskManager />
       </TabsContent>
       <TabsContent value="guests" className="mt-6">
         <GuestList />

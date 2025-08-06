@@ -6,6 +6,7 @@ import { UserProvider } from '@/hooks/use-user';
 import { PhotoProvider } from '@/hooks/use-photos';
 import Link from 'next/link';
 import { GuestProvider } from '@/hooks/use-guests';
+import { TaskProvider } from '@/hooks/use-tasks';
 
 export const metadata: Metadata = {
   title: {
@@ -34,19 +35,21 @@ export default function RootLayout({
           <SubscriptionProvider>
             <PhotoProvider>
               <GuestProvider>
-                <div className="flex-grow">
-                  {children}
-                </div>
-                <Toaster />
-                <footer className="text-center p-4 text-muted-foreground text-sm border-t">
-                  <div className="container mx-auto flex justify-between items-center">
-                      <p>Wedly &copy; {new Date().getFullYear()}</p>
-                      <div className="flex gap-4">
-                          <Link href="/blog" className="hover:text-primary transition-colors">Blog</Link>
-                          <Link href="/admin" className="hover:text-primary transition-colors">Admin</Link>
-                      </div>
+                <TaskProvider>
+                  <div className="flex-grow">
+                    {children}
                   </div>
-                </footer>
+                  <Toaster />
+                  <footer className="text-center p-4 text-muted-foreground text-sm border-t">
+                    <div className="container mx-auto flex justify-between items-center">
+                        <p>Wedly &copy; {new Date().getFullYear()}</p>
+                        <div className="flex gap-4">
+                            <Link href="/blog" className="hover:text-primary transition-colors">Blog</Link>
+                            <Link href="/admin" className="hover:text-primary transition-colors">Admin</Link>
+                        </div>
+                    </div>
+                  </footer>
+                </TaskProvider>
               </GuestProvider>
             </PhotoProvider>
           </SubscriptionProvider>

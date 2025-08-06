@@ -112,21 +112,6 @@ export async function askWeddingAssistant(input: WeddingAssistantInput): Promise
 }
 
 
-const prompt = ai.definePrompt({
-    name: 'weddingAssistantPrompt',
-    system: `You are a helpful and friendly wedding planning assistant. Your name is Welly.
-Use the available tools to answer the user's questions about their wedding plan.
-To use the tools, you MUST get the user's ID from the 'userId' field in the input. Do not ask the user for their ID.
-Provide clear, concise, and friendly answers.
-If you don't have the information, say so politely.
-Always refer to yourself in the first person (e.g., "I can help with that!").`,
-    tools: [getBudgetStatus, getGuestListSummary, getUpcomingTasks],
-    input: { schema: WeddingAssistantInputSchema },
-    output: { schema: WeddingAssistantOutputSchema },
-    prompt: `The user's question is: {{{question}}}.`
-});
-
-
 const weddingAssistantFlow = ai.defineFlow(
   {
     name: 'weddingAssistantFlow',
@@ -134,15 +119,34 @@ const weddingAssistantFlow = ai.defineFlow(
     outputSchema: WeddingAssistantOutputSchema,
   },
   async (input) => {
-    const llmResponse = await prompt(input);
+    const llmResponse = await ai.generate({
+        prompt: input.question,
+        model: 'googleai/gemini-1.5-flash-latest',
+        tools: [getBudgetStatus, getGuestListSummary, getUpcomingTasks],
+        context: [
+          { role: 'system',
+            content: `You are a helpful and friendly wedding planning assistant. Your name is Welly.
+Use the available tools to answer the user's questions about their wedding plan.
+To use the tools, you MUST get the user's ID from the context. Do not ask the user for their ID.
+The user's ID is: ${input.userId}.
+Provide clear, concise, and friendly answers.
+If you don't have the information, say so politely.
+Always refer to yourself in the first person (e.g., "I can help with that!").`
+          }
+        ],
+        output: {
+          schema: WeddingAssistantOutputSchema,
+        },
+    });
+
     const answer = llmResponse.output?.answer;
 
     if (answer) {
         return { answer };
     }
-
-    // Fallback if the structured output is empty
-    const rawTextResponse = ll.mResponse.text;
+    
+    // Fallback if the structured output is empty, but we got text.
+    const rawTextResponse = llmResponse.text;
     if (rawTextResponse) {
         return { answer: rawTextResponse };
     }

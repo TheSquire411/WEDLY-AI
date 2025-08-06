@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DashboardOverview } from '@/components/dashboard-overview';
-import { BudgetTracker, type Expense } from '@/components/budget-tracker';
+import { BudgetTracker } from '@/components/budget-tracker';
 import { TaskManager } from '@/components/task-manager';
 import { GuestList } from '@/components/guest-list';
 import { VisionBoard } from '@/components/vision-board';
@@ -14,25 +14,16 @@ import { LayoutDashboard, CircleDollarSign, ListChecks, Users, GalleryHorizontal
 import { useGuests } from '@/hooks/use-guests';
 import { useTasks } from '@/hooks/use-tasks';
 
-const initialExpenses = [
-  { id: '1', category: 'Venue', estimated: 5000, actual: 5500, vendor: 'Sunshine Meadows', dueDate: new Date('2024-10-01'), paid: true, reminder: false },
-  { id: '2', category: 'Catering', estimated: 6000, actual: 5800, vendor: 'Gourmet Delights', dueDate: new Date('2024-10-15'), paid: true, reminder: false },
-  { id: '3', category: 'Photography', estimated: 2500, actual: 2500, vendor: 'Timeless Snaps', dueDate: new Date('2024-09-20'), paid: true, reminder: true },
-  { id: '4', category: 'Flowers', estimated: 1500, actual: 1200, vendor: 'Blooming Creations', dueDate: new Date('2024-11-01'), paid: false, reminder: false },
-  { id: '5', category: 'Attire', estimated: 2000, actual: 2750, vendor: 'Elegant Gowns', dueDate: new Date('2024-08-30'), paid: true, reminder: false },
-  { id: '6', category: 'Entertainment', estimated: 3000, actual: 3000, vendor: 'Groove Band', dueDate: new Date('2024-11-10'), paid: false, reminder: true },
-];
+// This is now mock data for the dashboard overview until budget is fully user-specific
+const mockBudget = {
+  total: 20000,
+  spent: 17750,
+};
+
 
 export function AppTabs() {
-  const [totalBudget, setTotalBudget] = useState(20000);
-  const [expenses, setExpenses] = useState<Expense[]>(initialExpenses);
   const { guests } = useGuests();
   const { tasks } = useTasks();
-
-  const budgetSummary = {
-    total: totalBudget,
-    spent: expenses.filter(e => e.paid).reduce((sum, exp) => sum + exp.actual, 0),
-  };
 
   const guestSummary = {
     total: guests.length,
@@ -80,7 +71,7 @@ export function AppTabs() {
       </TabsList>
       <TabsContent value="dashboard" className="mt-6">
         <DashboardOverview
-            budgetSummary={budgetSummary}
+            budgetSummary={mockBudget}
             guestSummary={guestSummary}
             taskSummary={taskSummary}
         />
@@ -92,12 +83,7 @@ export function AppTabs() {
         <PhotoAlbum />
       </TabsContent>
       <TabsContent value="budget" className="mt-6">
-        <BudgetTracker
-            totalBudget={totalBudget}
-            setTotalBudget={setTotalBudget}
-            expenses={expenses}
-            setExpenses={setExpenses}
-        />
+        <BudgetTracker />
       </TabsContent>
       <TabsContent value="tasks" className="mt-6">
         <TaskManager />

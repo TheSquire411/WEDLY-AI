@@ -1,10 +1,12 @@
 
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { db } from '@/lib/firebase';
+import { collection, doc, onSnapshot, updateDoc, addDoc, Timestamp } from 'firebase/firestore';
 import { budgetAllocationSuggestions } from '@/ai/flows/budget-allocation-suggestions';
 import { Button } from '@/components/ui/button';
 import {
@@ -42,6 +44,7 @@ import { BudgetPieChart, type BudgetItem } from './budget-pie-chart';
 import { Badge } from './ui/badge';
 import { format } from 'date-fns';
 import { useSubscription } from '@/hooks/use-subscription';
+import { useUser } from '@/hooks/use-user';
 
 export interface Expense {
     id: string;
@@ -54,13 +57,6 @@ export interface Expense {
     reminder: boolean;
 }
 
-interface BudgetTrackerProps {
-    totalBudget: number;
-    setTotalBudget: (value: number) => void;
-    expenses: Expense[];
-    setExpenses: (value: Expense[]) => void;
-}
-
 const expenseSchema = z.object({
     category: z.string().min(1, "Category is required"),
     vendor: z.string().min(1, "Vendor is required"),
@@ -69,12 +65,17 @@ const expenseSchema = z.object({
 });
 
 
-export function BudgetTracker({ totalBudget, setTotalBudget, expenses, setExpenses }: BudgetTrackerProps) {
+export function BudgetTracker() {
   const [suggestions, setSuggestions] = useState<BudgetItem[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
+  const [totalBudget, setTotalBudget] = useState(20000);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [isDataLoading, setIsDataLoading] = useState(true);
+
   const { toast } = useToast();
   const { isPremium, openDialog } = useSubscription();
+  const { user } = useUser();
   
   const form = useForm<z.infer<typeof expenseSchema>>({
     resolver: zodResolver(expenseSchema),
@@ -85,6 +86,50 @@ export function BudgetTracker({ totalBudget, setTotalBudget, expenses, setExpens
       dueDate: new Date(),
     },
   });
+
+  const budgetDocRef = useMemo(() => {
+    if (!user) return null;
+    return doc(db, 'users', user.uid, 'budget', 'summary');
+  }, [user]);
+
+  const expensesCollectionRef = useMemo(() => {
+    if (!user) return null;
+    return collection(db, 'users', user.uid, 'expenses');
+  }, [user]);
+
+
+  useEffect(() => {
+    if (!budgetDocRef || !expensesCollectionRef) {
+      setIsDataLoading(false);
+      return;
+    }
+    setIsDataLoading(true);
+
+    const unsubscribeBudget = onSnapshot(budgetDocRef, (doc) => {
+        if (doc.exists()) {
+            setTotalBudget(doc.data().total || 20000);
+        }
+    });
+    
+    const unsubscribeExpenses = onSnapshot(expensesCollectionRef, (snapshot) => {
+        const expensesData = snapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                id: doc.id,
+                ...data,
+                dueDate: (data.dueDate as Timestamp).toDate()
+            } as Expense;
+        });
+        setExpenses(expensesData);
+        setIsDataLoading(false);
+    });
+
+    return () => {
+        unsubscribeBudget();
+        unsubscribeExpenses();
+    }
+  }, [budgetDocRef, expensesCollectionRef]);
+
 
   const totalSpent = useMemo(() => {
     return expenses.filter(e => e.paid).reduce((sum, expense) => sum + expense.actual, 0);
@@ -124,35 +169,51 @@ export function BudgetTracker({ totalBudget, setTotalBudget, expenses, setExpens
     }
   }
 
-  const togglePaidStatus = (id: string) => {
-    setExpenses(
-      expenses.map(e =>
-        e.id === id ? { ...e, paid: !e.paid } : e
-      )
-    );
+  const togglePaidStatus = async (id: string) => {
+    if (!user) return;
+    const expenseDocRef = doc(db, 'users', user.uid, 'expenses', id);
+    const expense = expenses.find(e => e.id === id);
+    if(expense) {
+        await updateDoc(expenseDocRef, { paid: !expense.paid });
+    }
   };
   
-  const toggleReminder = (id: string) => {
-    setExpenses(
-        expenses.map(e => (e.id === id ? { ...e, reminder: !e.reminder } : e))
-    );
+  const toggleReminder = async (id: string) => {
+    if (!user) return;
+    const expenseDocRef = doc(db, 'users', user.uid, 'expenses', id);
+    const expense = expenses.find(e => e.id === id);
+    if(expense) {
+        await updateDoc(expenseDocRef, { reminder: !expense.reminder });
+    }
   };
 
-  function handleAddExpense(values: z.infer<typeof expenseSchema>) {
-    const newExpense: Expense = {
-      id: `exp-${Date.now()}`,
-      ...values,
-      estimated: values.actual, // For simplicity, we'll set estimated to actual for new expenses
-      paid: false,
-      reminder: false,
-    };
-    setExpenses([newExpense, ...expenses]);
+  async function handleAddExpense(values: z.infer<typeof expenseSchema>) {
+    if (!expensesCollectionRef) return;
+    await addDoc(expensesCollectionRef, {
+        ...values,
+        estimated: values.actual,
+        paid: false,
+        reminder: false,
+        dueDate: Timestamp.fromDate(values.dueDate),
+    });
+
     toast({
         title: "Expense Added",
         description: `${values.category} for $${values.actual} has been added to your budget.`,
     });
     form.reset();
     setIsAddExpenseOpen(false);
+  }
+
+  const handleBudgetChange = async (newTotal: number) => {
+      setTotalBudget(newTotal);
+      if(budgetDocRef) {
+          await updateDoc(budgetDocRef, { total: newTotal }, { merge: true });
+      }
+  }
+
+  if (isDataLoading) {
+    return <div className="flex justify-center items-center p-8"><Loader2 className="h-8 w-8 animate-spin"/></div>
   }
 
   return (
@@ -172,7 +233,7 @@ export function BudgetTracker({ totalBudget, setTotalBudget, expenses, setExpens
                             id="totalBudget"
                             type="number"
                             value={totalBudget}
-                            onChange={(e) => setTotalBudget(Number(e.target.value))}
+                            onChange={(e) => handleBudgetChange(Number(e.target.value))}
                             className="w-48 pl-7 text-lg font-bold"
                         />
                     </div>

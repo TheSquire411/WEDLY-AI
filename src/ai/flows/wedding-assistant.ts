@@ -138,7 +138,7 @@ const weddingAssistantFlow = ai.defineFlow(
   async (input) => {
     try {
         const llmResponse = await prompt(input);
-        const answer = llmResponse.output?.answer;
+        const answer = ll.output?.answer;
 
         if (answer) {
             return { answer };

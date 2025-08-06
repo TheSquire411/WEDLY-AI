@@ -45,6 +45,7 @@ export default function RootLayout({
                         <p>Wedly &copy; {new Date().getFullYear()}</p>
                         <div className="flex gap-4">
                             <Link href="/blog" className="hover:text-primary transition-colors">Blog</Link>
+                            <Link href="/faq" className="hover:text-primary transition-colors">FAQ</Link>
                             <Link href="/admin" className="hover:text-primary transition-colors">Admin</Link>
                         </div>
                     </div>

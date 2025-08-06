@@ -28,12 +28,12 @@ export function Hero() {
         </div>
         <div className="mt-12">
             <Image 
-                src="https://placehold.co/1200x600.png"
-                alt="Wedly App Dashboard Screenshot"
-                data-ai-hint="wedding dashboard"
+                src="https://storage.googleapis.com/aip-dev-images-us-central1/public/wedly-hero-bouquet.jpg"
+                alt="A beautiful bouquet of wedding flowers"
+                data-ai-hint="wedding bouquet"
                 width={1200}
                 height={600}
-                className="rounded-xl shadow-2xl ring-1 ring-gray-900/10"
+                className="rounded-xl shadow-2xl ring-1 ring-gray-900/10 object-cover"
                 priority
             />
         </div>

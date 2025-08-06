@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -136,9 +137,23 @@ const weddingAssistantFlow = ai.defineFlow(
     outputSchema: WeddingAssistantOutputSchema,
   },
   async (input) => {
-    const llmResponse = await prompt(input);
-    return {
-        answer: llmResponse.output?.answer || "I'm not sure how to answer that. Can you try asking another way?",
-    };
+    try {
+        const llmResponse = await prompt(input);
+        const answer = llmResponse.output?.answer;
+
+        if (answer) {
+            return { answer };
+        } else {
+             // Fallback if the structured output is empty
+            const rawTextResponse = llmResponse.text;
+            if (rawTextResponse) {
+                return { answer: rawTextResponse };
+            }
+            return { answer: "I'm not sure how to answer that. Can you try asking another way?" };
+        }
+    } catch (error) {
+        console.error("Error in wedding assistant flow:", error);
+        return { answer: "Sorry, I encountered an error while trying to respond. Please try again." };
+    }
   }
 );

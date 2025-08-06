@@ -27,11 +27,16 @@ if (!admin.apps.length) {
 
 
 function getSafeAdminSDK<T>(serviceName: string, getService: (app: admin.app.App) => T, mock: T) {
-    if (admin.apps.length > 0) {
-        return getService(admin.app());
+    if (admin.apps.length > 0 && admin.app().name) {
+        try {
+            return getService(admin.app());
+        } catch (e) {
+             console.error(`Failed to get admin service: ${serviceName}`, e);
+             return mock;
+        }
     }
     
-    console.warn(`Firebase Admin SDK not initialized. Mocking ${serviceName}.`);
+    // console.warn(`Firebase Admin SDK not initialized. Mocking ${serviceName}.`);
     return mock;
 }
 
@@ -52,9 +57,11 @@ export const db = getSafeAdminSDK<admin.firestore.Firestore>(
         doc: () => ({
             update: async () => {},
             get: async () => ({exists: false, data: () => ({})}),
+            set: async () => {},
             collection: () => ({
                 doc: () => ({
                     get: async () => ({exists: false, data: () => ({})}),
+                    set: async () => {},
                 }),
                 where: () => ({
                     get: async () => ({docs: [], size: 0}),

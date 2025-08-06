@@ -76,7 +76,7 @@ export function BudgetTracker() {
 
   const { toast } = useToast();
   const { isPremium, openDialog } = useSubscription();
-  const { user } = useUser();
+  const { user, loading: userLoading } = useUser();
   
   const form = useForm<z.infer<typeof expenseSchema>>({
     resolver: zodResolver(expenseSchema),
@@ -100,10 +100,15 @@ export function BudgetTracker() {
 
 
   useEffect(() => {
-    if (!budgetDocRef || !expensesCollectionRef) {
+    if (userLoading) {
+      setIsDataLoading(true);
+      return;
+    }
+    if (!user || !budgetDocRef || !expensesCollectionRef) {
       setIsDataLoading(false);
       return;
     }
+
     setIsDataLoading(true);
 
     const unsubscribeBudget = onSnapshot(budgetDocRef, (doc) => {
@@ -111,7 +116,12 @@ export function BudgetTracker() {
             const data = doc.data();
             setTotalBudget(data.total || 0);
             setTotalSpent(data.spent || 0);
+        } else {
+            setTotalBudget(20000); // Default value
+            setTotalSpent(0);
         }
+    }, (error) => {
+        console.error("Error fetching budget summary:", error);
     });
     
     const unsubscribeExpenses = onSnapshot(expensesCollectionRef, (snapshot) => {
@@ -125,13 +135,16 @@ export function BudgetTracker() {
         });
         setExpenses(expensesData);
         setIsDataLoading(false);
+    }, (error) => {
+        console.error("Error fetching expenses:", error);
+        setIsDataLoading(false);
     });
 
     return () => {
         unsubscribeBudget();
         unsubscribeExpenses();
     }
-  }, [budgetDocRef, expensesCollectionRef]);
+  }, [user, userLoading, budgetDocRef, expensesCollectionRef]);
 
 
   const remainingBudget = useMemo(() => totalBudget - totalSpent, [totalBudget, totalSpent]);
@@ -225,7 +238,7 @@ export function BudgetTracker() {
       }
   }
 
-  if (isDataLoading) {
+  if (isDataLoading || userLoading) {
     return <div className="flex justify-center items-center p-8"><Loader2 className="h-8 w-8 animate-spin"/></div>
   }
 

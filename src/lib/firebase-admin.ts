@@ -1,73 +1,60 @@
 
 import * as admin from 'firebase-admin';
 
-// Check if the service account JSON is set
 const serviceAccountJson = process.env.FIREBASE_ADMIN_SERVICE_ACCOUNT_JSON;
-
-let app: admin.app.App;
 
 if (!admin.apps.length) {
   if (serviceAccountJson) {
     try {
       const serviceAccount = JSON.parse(serviceAccountJson);
-      app = admin.initializeApp({
+      admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
       });
     } catch (error) {
-      console.error("Firebase admin initialization error:", error);
-      // We are not re-throwing the error, so the app can start, but some features will be disabled.
-      // The functions below will handle the case where the app is not initialized.
+      console.error("Firebase admin initialization error from service account JSON:", error);
     }
   } else {
-    console.warn("FIREBASE_ADMIN_SERVICE_ACCOUNT_JSON environment variable is not set. Admin features will be disabled.");
+    console.warn("FIREBASE_ADMIN_SERVICE_ACCOUNT_JSON is not set. Admin features will be disabled. Falling back to default credentials.");
+    try {
+      admin.initializeApp();
+    } catch(error) {
+        console.error("Firebase admin initialization error with default credentials:", error);
+    }
   }
-} else {
-    app = admin.apps[0]!;
 }
 
-
-function getSafeAdminSDK<T>(serviceName: string, getService: (app: admin.app.App) => T, mock: T) {
-    if (admin.apps.length > 0 && admin.app().name) {
+const getSafeService = <T>(getter: () => T, mock: T): T => {
+    if (admin.apps.length > 0) {
         try {
-            return getService(admin.app());
+            return getter();
         } catch (e) {
-             console.error(`Failed to get admin service: ${serviceName}`, e);
-             return mock;
+            console.error('Failed to get admin service, returning mock. Error:', e);
+            return mock;
         }
     }
-    
-    // console.warn(`Firebase Admin SDK not initialized. Mocking ${serviceName}.`);
+    // console.warn('Firebase Admin SDK not initialized. Returning mock service.');
     return mock;
-}
+};
 
+export const auth = getSafeService(() => admin.auth(), {
+  verifyIdToken: async () => { throw new Error("Admin SDK not initialized"); }
+} as unknown as admin.auth.Auth);
 
-export const auth = getSafeAdminSDK<admin.auth.Auth>(
-    'auth',
-    (app) => app.auth(),
-    {
-      verifyIdToken: async () => { throw new Error("Admin SDK not initialized"); }
-    } as any
-);
-
-export const db = getSafeAdminSDK<admin.firestore.Firestore>(
-    'firestore',
-    (app) => app.firestore(),
-    {
-      collection: () => ({
-        doc: () => ({
-            update: async () => {},
-            get: async () => ({exists: false, data: () => ({})}),
-            set: async () => {},
-            collection: () => ({
-                doc: () => ({
-                    get: async () => ({exists: false, data: () => ({})}),
-                    set: async () => {},
-                }),
-                where: () => ({
-                    get: async () => ({docs: [], size: 0}),
-                })
+export const db = getSafeService(() => admin.firestore(), {
+  collection: () => ({
+    doc: () => ({
+        update: async () => {},
+        get: async () => ({exists: false, data: () => ({})}),
+        set: async () => {},
+        collection: () => ({
+            doc: () => ({
+                get: async () => ({exists: false, data: () => ({})}),
+                set: async () => {},
+            }),
+            where: () => ({
+                get: async () => ({docs: [], size: 0}),
             })
-        }),
-      }),
-    } as any
-);
+        })
+    }),
+  }),
+} as unknown as admin.firestore.Firestore);

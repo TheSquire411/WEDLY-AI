@@ -23,6 +23,7 @@ export interface UserData {
     name2: string;
     photoURL?: string | null;
     premium?: boolean;
+    isAdmin?: boolean;
 }
 
 interface UserContextType {
@@ -38,7 +39,7 @@ interface UserContextType {
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
-const initializeNewUserData = async (uid: string, userData: Omit<UserData, 'uid' | 'email'>) => {
+const initializeNewUserData = async (uid: string, userData: Omit<UserData, 'uid' | 'email' | 'isAdmin'>) => {
     const batch = writeBatch(db);
     
     const userDocRef = doc(db, 'users', uid);
@@ -63,7 +64,15 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     
                     const unsubscribeDoc = onSnapshot(userDocRef, (userDoc) => {
                         if (userDoc.exists()) {
-                            setUser({ ...userDoc.data(), uid: firebaseUser.uid, email: firebaseUser.email } as UserData);
+                            const userData = { ...userDoc.data(), uid: firebaseUser.uid, email: firebaseUser.email } as UserData;
+                            
+                            // Check for Admin override
+                            if (process.env.NEXT_PUBLIC_ADMIN_EMAIL && userData.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL) {
+                                userData.premium = true;
+                                userData.isAdmin = true;
+                            }
+                            
+                            setUser(userData);
                         }
                         setLoading(false);
                     });
@@ -102,7 +111,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
             displayName: `${name1},${name2}`
         });
 
-        const userData: Omit<UserData, 'uid' | 'email'> = {
+        const userData: Omit<UserData, 'uid' | 'email' | 'isAdmin'> = {
             name1,
             name2,
             photoURL: firebaseUser.photoURL,
@@ -128,7 +137,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (!userDoc.exists()) {
              const displayName = firebaseUser.displayName || "Jane,John";
              const [name1, name2] = displayName.includes(',') ? displayName.split(',') : [displayName, 'Partner'];
-             const userData: Omit<UserData, 'uid' | 'email'> = {
+             const userData: Omit<UserData, 'uid' | 'email' | 'isAdmin'> = {
                 name1,
                 name2,
                 photoURL: firebaseUser.photoURL,

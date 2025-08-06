@@ -1,3 +1,4 @@
+
 import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
@@ -7,6 +8,7 @@ import { PhotoProvider } from '@/hooks/use-photos';
 import Link from 'next/link';
 import { GuestProvider } from '@/hooks/use-guests';
 import { TaskProvider } from '@/hooks/use-tasks';
+import { Footer } from '@/components/footer';
 
 export const metadata: Metadata = {
   title: {
@@ -40,16 +42,7 @@ export default function RootLayout({
                     {children}
                   </div>
                   <Toaster />
-                  <footer className="text-center p-4 text-muted-foreground text-sm border-t">
-                    <div className="container mx-auto flex justify-between items-center">
-                        <p>Wedly &copy; {new Date().getFullYear()}</p>
-                        <div className="flex gap-4">
-                            <Link href="/blog" className="hover:text-primary transition-colors">Blog</Link>
-                            <Link href="/faq" className="hover:text-primary transition-colors">FAQ</Link>
-                            <Link href="/admin" className="hover:text-primary transition-colors">Admin</Link>
-                        </div>
-                    </div>
-                  </footer>
+                  <Footer />
                 </TaskProvider>
               </GuestProvider>
             </PhotoProvider>

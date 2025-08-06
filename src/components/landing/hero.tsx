@@ -29,7 +29,7 @@ export function Hero() {
         <div className="mt-12 mx-auto">
             <Image 
                 src="https://images.unsplash.com/reserve/xd45Y326SvKzSR3Nanc8_MRJ_8125-1.jpg?q=80&w=1469&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-                alt="A beautiful bouquet of wedding flowers"
+                alt="A beautiful wedding bouquet, part of the wedding planning inspiration from Wedly"
                 data-ai-hint="wedding bouquet"
                 width={1200}
                 height={300}

@@ -8,8 +8,7 @@ import { ArrowRight } from 'lucide-react';
 
 export function Hero() {
   return (
-    <section className="relative bg-white pt-20 pb-10 sm:pt-24 sm:pb-16 lg:pt-32 lg:pb-24">
-       <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gray-50"></div>
+    <section className="bg-white pt-20 pb-10 sm:pt-24 lg:pt-32">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-xl mx-auto text-center">
           <h1 className="text-4xl font-headline font-bold text-gray-900 sm:text-5xl lg:text-6xl">

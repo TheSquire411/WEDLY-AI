@@ -6,11 +6,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DashboardOverview } from '@/components/dashboard-overview';
 import { BudgetTracker, type Expense } from '@/components/budget-tracker';
 import { TaskManager, type Task } from '@/components/task-manager';
-import { GuestList, type Guest } from '@/components/guest-list';
+import { GuestList } from '@/components/guest-list';
 import { VisionBoard } from '@/components/vision-board';
 import { SeatingChart } from '@/components/seating-chart';
 import { PhotoAlbum } from '@/components/photo-album';
 import { LayoutDashboard, CircleDollarSign, ListChecks, Users, GalleryHorizontal, Armchair, Camera } from 'lucide-react';
+import { useGuests } from '@/hooks/use-guests';
 
 const initialExpenses = [
   { id: '1', category: 'Venue', estimated: 5000, actual: 5500, vendor: 'Sunshine Meadows', dueDate: new Date('2024-10-01'), paid: true, reminder: false },
@@ -19,17 +20,6 @@ const initialExpenses = [
   { id: '4', category: 'Flowers', estimated: 1500, actual: 1200, vendor: 'Blooming Creations', dueDate: new Date('2024-11-01'), paid: false, reminder: false },
   { id: '5', category: 'Attire', estimated: 2000, actual: 2750, vendor: 'Elegant Gowns', dueDate: new Date('2024-08-30'), paid: true, reminder: false },
   { id: '6', category: 'Entertainment', estimated: 3000, actual: 3000, vendor: 'Groove Band', dueDate: new Date('2024-11-10'), paid: false, reminder: true },
-];
-
-const initialGuests = [
-  { id: '1', name: 'Alice Johnson', rsvp: 'Confirmed', group: "Bride's Family", table: 2 },
-  { id: '2', name: 'Bob Williams', rsvp: 'Confirmed', group: "Bride's Family", table: 2 },
-  { id: '3', name: 'Charlie Brown', rsvp: 'Pending', group: "Groom's Friends", table: null },
-  { id: '4', name: 'Diana Miller', rsvp: 'Declined', group: "Bride's Friends", table: null },
-  { id: '5', name: 'Ethan Davis', rsvp: 'Confirmed', group: "Groom's Family", table: 5 },
-  { id: '6', name: 'Fiona Garcia', rsvp: 'Confirmed', group: 'Work Colleagues', table: 8 },
-  { id: '7', name: 'George Rodriguez', rsvp: 'Pending', group: 'Work Colleagues', table: null },
-  { id: '8', name: 'Hannah Smith', rsvp: 'Confirmed', group: "Groom's Family", table: 5 },
 ];
 
 const initialTasks = [
@@ -49,8 +39,8 @@ const initialTasks = [
 export function AppTabs() {
   const [totalBudget, setTotalBudget] = useState(20000);
   const [expenses, setExpenses] = useState<Expense[]>(initialExpenses);
-  const [guests, setGuests] = useState<Guest[]>(initialGuests);
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
+  const { guests } = useGuests();
 
   const budgetSummary = {
     total: totalBudget,
@@ -126,7 +116,7 @@ export function AppTabs() {
         <TaskManager tasks={tasks} setTasks={setTasks} />
       </TabsContent>
       <TabsContent value="guests" className="mt-6">
-        <GuestList guests={guests} setGuests={setGuests} />
+        <GuestList />
       </TabsContent>
       <TabsContent value="seating" className="mt-6">
         <SeatingChart />

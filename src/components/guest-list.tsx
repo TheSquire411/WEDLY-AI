@@ -26,23 +26,19 @@ import {
   DialogTitle,
   DialogFooter,
   DialogClose,
+  DialogDescription
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { PlusCircle, MoreHorizontal, Trash2 } from "lucide-react";
+import { PlusCircle, MoreHorizontal, Trash2, Loader2 } from "lucide-react";
+import { useGuests, type Guest } from "@/hooks/use-guests";
+import { useToast } from "@/hooks/use-toast";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "./ui/form";
 
-export interface Guest {
-    id: string;
-    name: string;
-    rsvp: 'Confirmed' | 'Pending' | 'Declined';
-    group: string;
-    table: number | null;
-}
-
-interface GuestListProps {
-    guests: Guest[];
-    setGuests: (guests: Guest[]) => void;
-}
 
 const getRsvpVariant = (rsvp: string) => {
   switch (rsvp) {
@@ -57,32 +53,61 @@ const getRsvpVariant = (rsvp: string) => {
   }
 };
 
-export function GuestList({ guests, setGuests }: GuestListProps) {
-  const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
+const addGuestSchema = z.object({
+    name: z.string().min(1, "Name is required"),
+    group: z.string().min(1, "Group is required"),
+});
+
+export function GuestList() {
+  const { guests, loading, addGuest, updateGuestRsvp, deleteGuest } = useGuests();
+  const [isEditRsvpOpen, setIsEditRsvpOpen] = React.useState(false);
+  const [isAddGuestOpen, setIsAddGuestOpen] = React.useState(false);
   const [selectedGuest, setSelectedGuest] = React.useState<Guest | null>(null);
   const [tempRsvp, setTempRsvp] = React.useState<Guest['rsvp'] | undefined>(undefined);
+  const { toast } = useToast();
 
-  const handleDeleteGuest = (guestId: string) => {
-    setGuests(guests.filter((guest) => guest.id !== guestId));
+  const form = useForm<z.infer<typeof addGuestSchema>>({
+    resolver: zodResolver(addGuestSchema),
+    defaultValues: {
+      name: "",
+      group: "",
+    },
+  });
+
+  const handleDeleteGuest = async (guestId: string) => {
+    await deleteGuest(guestId);
+    toast({ title: "Guest removed." });
   };
 
   const handleEditClick = (guest: Guest) => {
     setSelectedGuest(guest);
     setTempRsvp(guest.rsvp);
-    setIsEditDialogOpen(true);
+    setIsEditRsvpOpen(true);
   };
   
-  const handleSaveRsvp = () => {
+  const handleSaveRsvp = async () => {
     if (selectedGuest && tempRsvp) {
-      setGuests(
-        guests.map((g) =>
-          g.id === selectedGuest.id ? { ...g, rsvp: tempRsvp } : g
-        )
-      );
+      await updateGuestRsvp(selectedGuest.id, tempRsvp);
+      toast({ title: `RSVP for ${selectedGuest.name} updated.` });
     }
-    setIsEditDialogOpen(false);
+    setIsEditRsvpOpen(false);
     setSelectedGuest(null);
   };
+  
+  async function onAddGuest(values: z.infer<typeof addGuestSchema>) {
+    await addGuest({
+        name: values.name,
+        group: values.group,
+        rsvp: 'Pending',
+        table: null,
+    });
+    toast({
+        title: "Guest Added",
+        description: `${values.name} has been added to your guest list.`,
+    });
+    form.reset();
+    setIsAddGuestOpen(false);
+  }
 
   return (
     <>
@@ -92,7 +117,7 @@ export function GuestList({ guests, setGuests }: GuestListProps) {
             <CardTitle className="font-headline text-2xl">Guest List</CardTitle>
             <CardDescription>Manage your invited guests and track RSVPs.</CardDescription>
           </div>
-          <Button>
+          <Button onClick={() => setIsAddGuestOpen(true)}>
             <PlusCircle className="mr-2 h-4 w-4" />
             Add Guest
           </Button>
@@ -109,7 +134,13 @@ export function GuestList({ guests, setGuests }: GuestListProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {guests.map((guest) => (
+              {loading ? (
+                <TableRow>
+                    <TableCell colSpan={5} className="text-center">
+                        <Loader2 className="mx-auto h-6 w-6 animate-spin text-muted-foreground" />
+                    </TableCell>
+                </TableRow>
+              ) : guests.map((guest) => (
                 <TableRow key={guest.id}>
                   <TableCell className="font-medium">{guest.name}</TableCell>
                   <TableCell className="hidden sm:table-cell text-muted-foreground">{guest.group}</TableCell>
@@ -126,7 +157,7 @@ export function GuestList({ guests, setGuests }: GuestListProps) {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => handleEditClick(guest)}>
-                                Edit
+                                Edit RSVP
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleDeleteGuest(guest.id)} className="text-destructive">
                                 <Trash2 className="mr-2 h-4 w-4"/>
@@ -142,7 +173,7 @@ export function GuestList({ guests, setGuests }: GuestListProps) {
         </CardContent>
       </Card>
       
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+      <Dialog open={isEditRsvpOpen} onOpenChange={setIsEditRsvpOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit Guest: {selectedGuest?.name}</DialogTitle>
@@ -174,6 +205,50 @@ export function GuestList({ guests, setGuests }: GuestListProps) {
             </DialogClose>
             <Button type="button" onClick={handleSaveRsvp}>Save</Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={isAddGuestOpen} onOpenChange={setIsAddGuestOpen}>
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>Add New Guest</DialogTitle>
+                <DialogDescription>Enter the details for your new guest.</DialogDescription>
+            </DialogHeader>
+            <Form {...form}>
+                <form onSubmit={form.handleSubmit(onAddGuest)} className="space-y-4 py-4">
+                    <FormField
+                        control={form.control}
+                        name="name"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Full Name</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="e.g. John Doe" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="group"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Group</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="e.g. Bride's Family" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <DialogFooter>
+                        <DialogClose asChild>
+                            <Button type="button" variant="secondary">Cancel</Button>
+                        </DialogClose>
+                        <Button type="submit">Add Guest</Button>
+                    </DialogFooter>
+                </form>
+            </Form>
         </DialogContent>
       </Dialog>
     </>

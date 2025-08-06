@@ -5,6 +5,7 @@ import { SubscriptionProvider } from '@/hooks/use-subscription';
 import { UserProvider } from '@/hooks/use-user';
 import { PhotoProvider } from '@/hooks/use-photos';
 import Link from 'next/link';
+import { GuestProvider } from '@/hooks/use-guests';
 
 export const metadata: Metadata = {
   title: {
@@ -32,19 +33,21 @@ export default function RootLayout({
         <UserProvider>
           <SubscriptionProvider>
             <PhotoProvider>
-              <div className="flex-grow">
-                {children}
-              </div>
-              <Toaster />
-              <footer className="text-center p-4 text-muted-foreground text-sm border-t">
-                <div className="container mx-auto flex justify-between items-center">
-                    <p>Wedly &copy; {new Date().getFullYear()}</p>
-                    <div className="flex gap-4">
-                        <Link href="/blog" className="hover:text-primary transition-colors">Blog</Link>
-                        <Link href="/admin" className="hover:text-primary transition-colors">Admin</Link>
-                    </div>
+              <GuestProvider>
+                <div className="flex-grow">
+                  {children}
                 </div>
-              </footer>
+                <Toaster />
+                <footer className="text-center p-4 text-muted-foreground text-sm border-t">
+                  <div className="container mx-auto flex justify-between items-center">
+                      <p>Wedly &copy; {new Date().getFullYear()}</p>
+                      <div className="flex gap-4">
+                          <Link href="/blog" className="hover:text-primary transition-colors">Blog</Link>
+                          <Link href="/admin" className="hover:text-primary transition-colors">Admin</Link>
+                      </div>
+                  </div>
+                </footer>
+              </GuestProvider>
             </PhotoProvider>
           </SubscriptionProvider>
         </UserProvider>

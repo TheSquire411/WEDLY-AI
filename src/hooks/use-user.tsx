@@ -12,9 +12,9 @@ import {
     signInWithPopup,
     sendPasswordResetEmail,
     updateProfile,
-    type User as FirebaseUser
+    UserCredential
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, onSnapshot, writeBatch } from 'firebase/firestore';
+import { doc, getDoc, onSnapshot, writeBatch } from 'firebase/firestore';
 
 export interface UserData {
     uid: string;
@@ -31,9 +31,9 @@ interface UserContextType {
   loading: boolean;
   getIdToken: () => Promise<string | null>;
   signOutUser: () => Promise<void>;
-  signUp: (email:string, password:string, name1:string, name2:string) => Promise<any>;
-  signInWithEmail: (email:string, password:string) => Promise<any>;
-  signInWithGoogle: () => Promise<any>;
+  signUp: (email:string, password:string, name1:string, name2:string) => Promise<UserCredential>;
+  signInWithEmail: (email:string, password:string) => Promise<UserCredential>;
+  signInWithGoogle: () => Promise<UserCredential>;
   resetPassword: (email: string) => Promise<void>;
 }
 
@@ -62,16 +62,18 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 if (firebaseUser) {
                     const userDocRef = doc(db, 'users', firebaseUser.uid);
                     
+                    const idTokenResult = await firebaseUser.getIdTokenResult();
+                    const isAdmin = idTokenResult.claims.isAdmin === true;
+
                     const unsubscribeDoc = onSnapshot(userDocRef, (userDoc) => {
                         if (userDoc.exists()) {
                             const userData = { ...userDoc.data(), uid: firebaseUser.uid, email: firebaseUser.email } as UserData;
                             
-                            // Check for Admin override
-                            if (process.env.NEXT_PUBLIC_ADMIN_EMAIL && userData.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL) {
+                            userData.isAdmin = isAdmin;
+                            if (isAdmin) {
                                 userData.premium = true;
-                                userData.isAdmin = true;
                             }
-                            
+
                             setUser(userData);
                         }
                         setLoading(false);

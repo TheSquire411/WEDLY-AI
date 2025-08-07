@@ -15,7 +15,7 @@ export function AdminHeader() {
         </div>
         <div className="flex items-center gap-4">
             <Button asChild variant="outline">
-                <Link href="/">
+                <Link href="/dashboard">
                     Back to App
                 </Link>
             </Button>

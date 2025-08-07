@@ -12,9 +12,9 @@ import {
     signInWithPopup,
     sendPasswordResetEmail,
     updateProfile,
-    type User as FirebaseUser
+    UserCredential
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, onSnapshot, writeBatch } from 'firebase/firestore';
+import { doc, getDoc, onSnapshot, writeBatch } from 'firebase/firestore';
 
 export interface UserData {
     uid: string;
@@ -23,6 +23,7 @@ export interface UserData {
     name2: string;
     photoURL?: string | null;
     premium?: boolean;
+    isAdmin?: boolean;
 }
 
 interface UserContextType {
@@ -30,15 +31,15 @@ interface UserContextType {
   loading: boolean;
   getIdToken: () => Promise<string | null>;
   signOutUser: () => Promise<void>;
-  signUp: (email:string, password:string, name1:string, name2:string) => Promise<any>;
-  signInWithEmail: (email:string, password:string) => Promise<any>;
-  signInWithGoogle: () => Promise<any>;
+  signUp: (email:string, password:string, name1:string, name2:string) => Promise<UserCredential>;
+  signInWithEmail: (email:string, password:string) => Promise<UserCredential>;
+  signInWithGoogle: () => Promise<UserCredential>;
   resetPassword: (email: string) => Promise<void>;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
-const initializeNewUserData = async (uid: string, userData: Omit<UserData, 'uid' | 'email'>) => {
+const initializeNewUserData = async (uid: string, userData: Omit<UserData, 'uid' | 'email' | 'isAdmin'>) => {
     const batch = writeBatch(db);
     
     const userDocRef = doc(db, 'users', uid);
@@ -61,9 +62,19 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 if (firebaseUser) {
                     const userDocRef = doc(db, 'users', firebaseUser.uid);
                     
+                    const idTokenResult = await firebaseUser.getIdTokenResult();
+                    const isAdmin = idTokenResult.claims.isAdmin === true;
+
                     const unsubscribeDoc = onSnapshot(userDocRef, (userDoc) => {
                         if (userDoc.exists()) {
-                            setUser({ ...userDoc.data(), uid: firebaseUser.uid, email: firebaseUser.email } as UserData);
+                            const userData = { ...userDoc.data(), uid: firebaseUser.uid, email: firebaseUser.email } as UserData;
+                            
+                            userData.isAdmin = isAdmin;
+                            if (isAdmin) {
+                                userData.premium = true;
+                            }
+
+                            setUser(userData);
                         }
                         setLoading(false);
                     });
@@ -102,7 +113,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
             displayName: `${name1},${name2}`
         });
 
-        const userData: Omit<UserData, 'uid' | 'email'> = {
+        const userData: Omit<UserData, 'uid' | 'email' | 'isAdmin'> = {
             name1,
             name2,
             photoURL: firebaseUser.photoURL,
@@ -128,7 +139,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (!userDoc.exists()) {
              const displayName = firebaseUser.displayName || "Jane,John";
              const [name1, name2] = displayName.includes(',') ? displayName.split(',') : [displayName, 'Partner'];
-             const userData: Omit<UserData, 'uid' | 'email'> = {
+             const userData: Omit<UserData, 'uid' | 'email' | 'isAdmin'> = {
                 name1,
                 name2,
                 photoURL: firebaseUser.photoURL,
@@ -136,6 +147,10 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
              };
              await initializeNewUserData(firebaseUser.uid, userData);
         }
+
+        // Force a token refresh to get custom claims.
+        await result.user.getIdToken(true);
+
         return result;
     };
     

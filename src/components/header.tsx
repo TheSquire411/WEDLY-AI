@@ -3,7 +3,7 @@
 "use client"
 
 import Link from 'next/link';
-import { Heart, Gem, LogOut, User as UserIcon } from 'lucide-react';
+import { Heart, Gem, LogOut, User as UserIcon, LayoutDashboard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -26,7 +26,7 @@ export function Header() {
 
   const handleSignOut = async () => {
     await signOutUser();
-    router.push('/login');
+    router.push('/');
   };
 
   const getInitials = (name1?: string, name2?: string) => {
@@ -54,6 +54,12 @@ export function Header() {
                     Upgrade
                 </Button>
               )}
+               <Button asChild variant="outline">
+                <Link href="/dashboard">
+                    <LayoutDashboard className="mr-2 h-4 w-4"/>
+                    Dashboard
+                </Link>
+            </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-12 w-12 rounded-full">

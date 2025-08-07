@@ -11,30 +11,8 @@ import { VisionBoard } from '@/components/vision-board';
 import { SeatingChart } from '@/components/seating-chart';
 import { PhotoAlbum } from '@/components/photo-album';
 import { LayoutDashboard, CircleDollarSign, ListChecks, Users, GalleryHorizontal, Armchair, Camera } from 'lucide-react';
-import { useGuests } from '@/hooks/use-guests';
-import { useTasks } from '@/hooks/use-tasks';
-
-// This is now mock data for the dashboard overview until budget is fully user-specific
-const mockBudget = {
-  total: 20000,
-  spent: 17750,
-};
-
 
 export function AppTabs() {
-  const { guests } = useGuests();
-  const { tasks } = useTasks();
-
-  const guestSummary = {
-    total: guests.length,
-    confirmed: guests.filter(g => g.rsvp === 'Confirmed').length,
-  };
-  
-  const taskSummary = {
-    remaining: tasks.filter(t => !t.completed).length,
-    // A simple overdue mock logic, can be refined later
-    overdue: tasks.filter(t => !t.completed && (t.dueDate.includes('months out') || t.dueDate.includes('weeks out'))).length,
-  };
 
 
   return (
@@ -70,11 +48,7 @@ export function AppTabs() {
         </TabsTrigger>
       </TabsList>
       <TabsContent value="dashboard" className="mt-6">
-        <DashboardOverview
-            budgetSummary={mockBudget}
-            guestSummary={guestSummary}
-            taskSummary={taskSummary}
-        />
+        <DashboardOverview />
       </TabsContent>
        <TabsContent value="vision-board" className="mt-6">
         <VisionBoard />

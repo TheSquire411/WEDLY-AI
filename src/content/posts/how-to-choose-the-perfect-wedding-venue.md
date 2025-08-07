@@ -2,7 +2,7 @@
 title: 'How to Choose the Perfect Wedding Venue'
 date: '2024-06-28'
 excerpt: "The venue sets the tone for your entire wedding. From rustic barns to elegant ballrooms, here's how to find the perfect backdrop for your special day that fits your style and budget."
-image: 'https://placehold.co/600x400.png'
+image: 'https://images.unsplash.com/photo-1665607437981-973dcd6a22bb?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3'
 image_alt: 'A beautiful and empty wedding venue with chandeliers'
 image_hint: 'wedding venue'
 ---

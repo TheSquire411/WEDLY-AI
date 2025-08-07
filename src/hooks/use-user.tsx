@@ -145,6 +145,12 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
              };
              await initializeNewUserData(firebaseUser.uid, userData);
         }
+
+        // After sign-in, check if the user is the admin and update the state
+        if (process.env.NEXT_PUBLIC_ADMIN_EMAIL && firebaseUser.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL) {
+            setUser(prevUser => prevUser ? { ...prevUser, isAdmin: true, premium: true } : null);
+        }
+
         return result;
     };
     

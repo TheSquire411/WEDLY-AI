@@ -19,17 +19,9 @@ interface VisionImage {
     hint: string;
 }
 
-const initialImages: VisionImage[] = [
-    { id: 'image-1', src: "https://placehold.co/400x400.png", alt: "Wedding inspiration 1", hint: "wedding dress" },
-    { id: 'image-2', src: "https://placehold.co/400x400.png", alt: "Wedding inspiration 2", hint: "wedding venue" },
-    { id: 'image-3', src: "https://placehold.co/400x400.png", alt: "Wedding inspiration 3", hint: "wedding cake" },
-    { id: 'image-4', src: "https://placehold.co/400x400.png", alt: "Wedding inspiration 4", hint: "flower bouquet" },
-];
-
-
 export function VisionBoard() {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
-  const [images, setImages] = useState<VisionImage[]>(initialImages);
+  const [images, setImages] = useState<VisionImage[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<UnsplashImage[]>([]);

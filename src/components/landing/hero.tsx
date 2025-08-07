@@ -17,11 +17,19 @@ export function Hero() {
           <p className="mt-6 text-lg text-gray-600">
             Effortlessly craft vows, manage guests, and beat your budget with smarter AI.
           </p>
-          <Button asChild size="lg" className="mt-8">
-            <Link href="/signup">
-              Get Started for Free <ArrowRight className="ml-2" />
-            </Link>
-          </Button>
+          <div className="mt-8 flex flex-col items-center">
+            <div className="mb-5 inline-flex max-w-[90%] items-center rounded-xl border border-purple-200 bg-purple-50 px-5 py-3 text-center text-[15px] text-purple-800 shadow-[0_4px_15px_rgba(0,0,0,0.05)]">
+              <span className="mr-3 text-xl">🎁</span>
+              <p className="m-0 leading-snug">
+                Sign up this week to unlock a <strong className="font-semibold text-purple-900">Premium AI Wedding Speech Guide</strong> instantly!
+              </p>
+            </div>
+            <Button asChild size="lg">
+              <Link href="/signup">
+                Start Your Effortless Wedding Plan <ArrowRight className="ml-2" />
+              </Link>
+            </Button>
+          </div>
           <p className="mt-4 text-sm text-gray-500">
             Already have an account? <Link href="/login" className="text-primary font-medium hover:underline">Log in</Link>
           </p>

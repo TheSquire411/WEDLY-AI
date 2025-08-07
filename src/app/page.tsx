@@ -4,6 +4,7 @@
 import { Header } from '@/components/header';
 import { Hero } from '@/components/landing/hero';
 import { Features }from '@/components/landing/features';
+import { Upgrade } from '@/components/landing/upgrade';
 import { CTA } from '@/components/landing/cta';
 import { Testimonials } from '@/components/landing/testimonials';
 
@@ -14,6 +15,7 @@ export default function LandingPage() {
       <main className="flex-grow">
         <Hero />
         <Features />
+        <Upgrade />
         <Testimonials />
         <CTA />
       </main>

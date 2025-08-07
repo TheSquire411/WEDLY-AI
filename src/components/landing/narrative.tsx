@@ -7,12 +7,13 @@ export function Narrative() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="relative isolate overflow-hidden bg-background shadow-xl rounded-2xl">
           <div className="grid grid-cols-1 lg:grid-cols-2">
-             <div className="relative h-64 lg:h-auto">
+             <div className="relative min-h-[300px] lg:min-h-[500px]">
                  <Image
-                    src="https://images.unsplash.com/photo-1596423528625-998825c3825a?q=80&w=1374&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-                    alt="A happy couple sharing a laugh together outdoors"
+                    src="https://images.unsplash.com/photo-1525422847952-7f91db09a364?q=80&w=1374&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                    alt="A happy couple laughing together outdoors"
                     data-ai-hint="happy couple"
                     fill
+                    sizes="(max-width: 1024px) 100vw, 50vw"
                     className="object-cover"
                 />
             </div>

@@ -147,6 +147,10 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
              };
              await initializeNewUserData(firebaseUser.uid, userData);
         }
+
+        // Force a token refresh to get custom claims.
+        await result.user.getIdToken(true);
+
         return result;
     };
     

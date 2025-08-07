@@ -1,5 +1,5 @@
 
-import Image from 'next/image';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 const testimonials = [
   {
@@ -7,8 +7,6 @@ const testimonials = [
     author: {
       name: 'Sarah & Tom',
       handle: 'sarahandtom',
-      imageUrl: 'https://placehold.co/100x100.png',
-      imageHint: 'happy couple'
     },
   },
   {
@@ -16,8 +14,6 @@ const testimonials = [
     author: {
       name: 'Jessica & Mark',
       handle: 'jessandmark',
-      imageUrl: 'https://placehold.co/100x100.png',
-      imageHint: 'laughing couple'
     },
   },
   {
@@ -25,11 +21,17 @@ const testimonials = [
     author: {
       name: 'Emily & Chris',
       handle: 'emilyandchris',
-      imageUrl: 'https://placehold.co/100x100.png',
-      imageHint: 'smiling couple'
     },
   },
 ];
+
+const getInitials = (name: string) => {
+    const names = name.split(' & ');
+    if (names.length >= 2) {
+        return `${names[0][0]}${names[1][0]}`;
+    }
+    return name.substring(0, 2);
+}
 
 export function Testimonials() {
   return (
@@ -53,14 +55,11 @@ export function Testimonials() {
                 <p>{`“${testimonial.body}”`}</p>
               </blockquote>
               <figcaption className="flex items-center gap-x-4 border-t border-gray-900/10 px-6 py-4">
-                <Image
-                  className="h-10 w-10 flex-none rounded-full bg-gray-50"
-                  src={testimonial.author.imageUrl}
-                  data-ai-hint={testimonial.author.imageHint}
-                  alt={testimonial.author.name}
-                  width={40}
-                  height={40}
-                />
+                <Avatar className="h-10 w-10">
+                    <AvatarFallback className="bg-primary/20 text-primary-foreground font-semibold">
+                        {getInitials(testimonial.author.name)}
+                    </AvatarFallback>
+                </Avatar>
                 <div className="flex-auto">
                   <div className="font-semibold">{testimonial.author.name}</div>
                   <div className="text-gray-600">{`@${testimonial.author.handle}`}</div>

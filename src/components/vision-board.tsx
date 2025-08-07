@@ -10,6 +10,7 @@ import { Upload, Search } from 'lucide-react';
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 import { unsplashImageSearch, type UnsplashImage } from '@/ai/flows/unsplash-image-search';
 import { UnsplashSearchDialog } from './unsplash-search-dialog';
+import { useToast } from '@/hooks/use-toast';
 
 interface VisionImage {
     id: string;
@@ -33,6 +34,7 @@ export function VisionBoard() {
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<UnsplashImage[]>([]);
   const [isSearchDialogOpen, setIsSearchDialogOpen] = useState(false);
+  const { toast } = useToast();
 
   const handleUploadClick = () => {
     fileInputRef.current?.click();
@@ -89,6 +91,11 @@ export function VisionBoard() {
           setIsSearchDialogOpen(true);
       } catch (error) {
           console.error("Unsplash search error:", error);
+          toast({
+            title: "Search Failed",
+            description: "Could not fetch images from Unsplash. Please try again later.",
+            variant: "destructive",
+          });
       } finally {
           setIsSearching(false);
       }

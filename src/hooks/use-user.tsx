@@ -64,11 +64,10 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     
                     const unsubscribeDoc = onSnapshot(userDocRef, (userDoc) => {
                         if (userDoc.exists()) {
-                            const userData = { ...userDoc.data(), uid: firebaseUser.uid, email: firebaseUser.email } as UserData;
+                             const userData = { ...userDoc.data(), uid: firebaseUser.uid, email: firebaseUser.email } as UserData;
                             
                             // Check for Admin override
                             if (process.env.NEXT_PUBLIC_ADMIN_EMAIL && userData.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL) {
-                                userData.premium = true;
                                 userData.isAdmin = true;
                             }
                             
@@ -144,11 +143,6 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 premium: false,
              };
              await initializeNewUserData(firebaseUser.uid, userData);
-        }
-
-        // After sign-in, check if the user is the admin and update the state
-        if (process.env.NEXT_PUBLIC_ADMIN_EMAIL && firebaseUser.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL) {
-            setUser(prevUser => prevUser ? { ...prevUser, isAdmin: true, premium: true } : null);
         }
 
         return result;

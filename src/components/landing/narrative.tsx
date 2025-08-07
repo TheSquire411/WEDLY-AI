@@ -9,7 +9,7 @@ export function Narrative() {
           <div className="grid grid-cols-1 lg:grid-cols-2">
              <div className="relative h-64 lg:h-auto">
                  <Image
-                    src="https://i.imgur.com/b2wN32D.jpeg"
+                    src="https://images.unsplash.com/photo-1596423528625-998825c3825a?q=80&w=1374&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
                     alt="A happy couple sharing a laugh together outdoors"
                     data-ai-hint="happy couple"
                     fill

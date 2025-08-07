@@ -18,17 +18,23 @@ export function Hero() {
       </div>
 
       {/* Dark Overlay */}
-      <div className="absolute top-0 left-0 w-full h-full bg-black opacity-50 z-10"></div>
+      <div className="absolute top-0 left-0 w-full h-full bg-black/50 z-10"></div>
       
       {/* Content */}
       <div className="relative z-20 max-w-2xl mx-auto px-4">
         <h1 className="text-4xl font-headline font-bold sm:text-5xl lg:text-6xl text-shadow-md">
-          Your Wedding, Perfectly Planned by AI
+          Stop Wedding Planning Stress. Start AI-Powered Bliss.
         </h1>
         <p className="mt-6 text-lg text-shadow">
-          From personalized vows to a budget that behaves, Wedly handles the details so you can enjoy your engagement.
+          Effortlessly craft vows, manage guests, and beat your budget with smarter AI.
         </p>
-        <div className="mt-8">
+        <div className="mt-8 flex flex-col items-center gap-4">
+           <div className="inline-flex items-center gap-3 bg-white/10 backdrop-blur-sm text-white py-3 px-5 rounded-full border border-white/20 shadow-lg">
+                <span className="text-xl">🎁</span>
+                <p className="text-sm">
+                    Sign up this week to unlock a <strong>Premium AI Wedding Speech Guide</strong> instantly!
+                </p>
+            </div>
             <Button asChild size="lg">
               <Link href="/signup">
                 Start Your Effortless Plan <ArrowRight className="ml-2" />

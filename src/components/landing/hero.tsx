@@ -12,10 +12,10 @@ export function Hero() {
       <div className="container mx-auto px-6 sm:px-8 lg:px-8">
         <div className="max-w-xl mx-auto text-center">
           <h1 className="text-4xl font-headline font-bold text-gray-900 sm:text-5xl lg:text-6xl">
-            Plan Your Perfect Day, Stress-Free
+            Stop Wedding Planning Stress. Start AI-Powered Bliss.
           </h1>
           <p className="mt-6 text-lg text-gray-600">
-            Wedly is the AI-powered wedding planning assistant that handles the details, so you can focus on the "I do".
+            Effortlessly craft vows, manage guests, and beat your budget with smarter AI.
           </p>
           <Button asChild size="lg" className="mt-8">
             <Link href="/signup">

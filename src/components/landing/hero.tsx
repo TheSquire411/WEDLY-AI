@@ -2,42 +2,56 @@
 "use client";
 
 import Link from 'next/link';
-import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 
 export function Hero() {
   return (
-    <section className="bg-white pt-20 pb-10 sm:pt-24 lg:pt-32">
-      <div className="container mx-auto px-6 sm:px-8 lg:px-8">
-        <div className="max-w-xl mx-auto text-center">
-          <h1 className="text-4xl font-headline font-bold text-gray-900 sm:text-5xl lg:text-6xl">
-            Plan Your Perfect Day, Stress-Free
-          </h1>
-          <p className="mt-6 text-lg text-gray-600">
-            Wedly is the AI-powered wedding planning assistant that handles the details, so you can focus on the "I do".
-          </p>
-          <Button asChild size="lg" className="mt-8">
-            <Link href="/signup">
-              Get Started for Free <ArrowRight className="ml-2" />
-            </Link>
-          </Button>
-          <p className="mt-4 text-sm text-gray-500">
-            Already have an account? <Link href="/login" className="text-primary font-medium hover:underline">Log in</Link>
-          </p>
-        </div>
-        <div className="mt-12 mx-auto">
-            <Image 
-                src="https://images.unsplash.com/reserve/xd45Y326SvKzSR3Nanc8_MRJ_8125-1.jpg?q=80&w=1469&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-                alt="A beautiful wedding bouquet, part of the wedding planning inspiration from Wedly"
-                data-ai-hint="wedding bouquet"
-                width={1200}
-                height={300}
-                className="rounded-xl shadow-2xl ring-1 ring-gray-900/10 object-cover"
-                priority
-            />
+    <section className="relative h-screen flex items-center justify-center text-center text-white overflow-hidden">
+      {/* Video Background */}
+      <div className="absolute top-0 left-0 w-full h-full z-0">
+        <iframe
+          src="https://player.vimeo.com/video/1107994292?background=1&autoplay=1&loop=1&muted=1&quality=1080p"
+          className="absolute top-1/2 left-1/2 w-full h-full min-w-full min-h-full object-cover transform -translate-x-1/2 -translate-y-1/2"
+          allow="autoplay; fullscreen"
+        ></iframe>
+      </div>
+
+      {/* Dark Overlay */}
+      <div className="absolute top-0 left-0 w-full h-full bg-black/50 z-10"></div>
+      
+      {/* Content */}
+      <div className="relative z-20 max-w-2xl mx-auto px-4">
+        <h1 className="text-4xl font-headline font-bold sm:text-5xl lg:text-6xl text-shadow-md">
+          Stop Wedding Planning Stress. Start AI-Powered Bliss.
+        </h1>
+        <p className="mt-6 text-lg text-shadow">
+          Effortlessly craft vows, manage guests, and beat your budget with smarter AI.
+        </p>
+        <div className="mt-8 flex flex-col items-center gap-4">
+           <div className="inline-flex items-center gap-3 bg-white/10 backdrop-blur-sm text-white py-3 px-5 rounded-full border border-white/20 shadow-lg">
+                <span className="text-xl">🎁</span>
+                <p className="text-sm">
+                    Sign up this week to unlock a <strong>Premium AI Wedding Speech Guide</strong> instantly!
+                </p>
+            </div>
+            <Button asChild size="lg">
+              <Link href="/signup">
+                Start Your Effortless Plan <ArrowRight className="ml-2" />
+              </Link>
+            </Button>
         </div>
       </div>
+
+      {/* Simple text shadow utility styles */}
+      <style jsx>{`
+        .text-shadow-md {
+          text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+        .text-shadow {
+          text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+        }
+      `}</style>
     </section>
   );
 }

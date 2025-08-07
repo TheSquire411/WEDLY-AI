@@ -10,6 +10,7 @@ import { Upload, Search } from 'lucide-react';
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 import { unsplashImageSearch, type UnsplashImage } from '@/ai/flows/unsplash-image-search';
 import { UnsplashSearchDialog } from './unsplash-search-dialog';
+import { useToast } from '@/hooks/use-toast';
 
 interface VisionImage {
     id: string;
@@ -18,21 +19,14 @@ interface VisionImage {
     hint: string;
 }
 
-const initialImages: VisionImage[] = [
-    { id: 'image-1', src: "https://placehold.co/400x400.png", alt: "Wedding inspiration 1", hint: "wedding dress" },
-    { id: 'image-2', src: "https://placehold.co/400x400.png", alt: "Wedding inspiration 2", hint: "wedding venue" },
-    { id: 'image-3', src: "https://placehold.co/400x400.png", alt: "Wedding inspiration 3", hint: "wedding cake" },
-    { id: 'image-4', src: "https://placehold.co/400x400.png", alt: "Wedding inspiration 4", hint: "flower bouquet" },
-];
-
-
 export function VisionBoard() {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
-  const [images, setImages] = useState<VisionImage[]>(initialImages);
+  const [images, setImages] = useState<VisionImage[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<UnsplashImage[]>([]);
   const [isSearchDialogOpen, setIsSearchDialogOpen] = useState(false);
+  const { toast } = useToast();
 
   const handleUploadClick = () => {
     fileInputRef.current?.click();
@@ -89,6 +83,11 @@ export function VisionBoard() {
           setIsSearchDialogOpen(true);
       } catch (error) {
           console.error("Unsplash search error:", error);
+          toast({
+            title: "Search Failed",
+            description: "Could not fetch images from Unsplash. Please try again later.",
+            variant: "destructive",
+          });
       } finally {
           setIsSearching(false);
       }

@@ -14,12 +14,9 @@ if (!admin.apps.length) {
       console.error("Firebase admin initialization error from service account JSON:", error);
     }
   } else {
-    console.warn("FIREBASE_ADMIN_SERVICE_ACCOUNT_JSON is not set. Admin features will be disabled. Falling back to default credentials.");
-    try {
-      admin.initializeApp();
-    } catch(error) {
-        console.error("Firebase admin initialization error with default credentials:", error);
-    }
+    // Do not initialize with default credentials in a local/unconfigured environment
+    // to prevent metadata server errors. The getSafeService function will handle this.
+    console.warn("FIREBASE_ADMIN_SERVICE_ACCOUNT_JSON is not set. Admin features will be disabled in this environment.");
   }
 }
 

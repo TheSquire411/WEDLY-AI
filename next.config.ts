@@ -1,6 +1,5 @@
 
 import type {NextConfig} from 'next';
-require('dotenv').config({ path: './.env.local' });
 
 
 const nextConfig: NextConfig = {
@@ -154,9 +153,7 @@ const nextConfig: NextConfig = {
     ];
   },
   // Content Security Policy in middleware for dynamic content
-  experimental: {
-    serverComponentsExternalPackages: ['@firebase/admin'],
-  },
+  serverExternalPackages: ['firebase-admin', '@firebase/admin'],
 };
 
 export default nextConfig;

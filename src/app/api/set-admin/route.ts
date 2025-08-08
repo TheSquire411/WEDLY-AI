@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/lib/firebase-admin';
+import { auth } from '../../../../lib/firebase-admin-server.js';
 import { 
   createErrorResponse, 
   extractRequestContext, 

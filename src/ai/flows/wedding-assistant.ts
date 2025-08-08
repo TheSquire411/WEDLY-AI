@@ -11,7 +11,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { db } from '@/lib/firebase-admin';
+import { db } from '../../../lib/firebase-admin-server.js';
 import { Timestamp } from 'firebase-admin/firestore';
 
 // Tool to get budget status

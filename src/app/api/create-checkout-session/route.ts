@@ -1,6 +1,6 @@
 
 import { NextResponse } from 'next/server';
-import { auth } from '@/lib/firebase-admin';
+import { verifyAuthToken } from '../../../../lib/auth-server.js';
 import { createCheckoutSession } from '../../../../lib/stripeServer.js';
 import { 
   createErrorResponse, 
@@ -55,52 +55,19 @@ export async function POST(request: Request) {
       RateLimitConfigs.payment.maxRequests
     );
     // Verify Firebase ID token for authentication
-    const authorization = request.headers.get('Authorization');
-    if (!authorization?.startsWith('Bearer ')) {
+    const authResult = await verifyAuthToken(request);
+    if (authResult.error) {
       throw createAppError(
-        'Authorization header missing or invalid format',
-        ErrorCategory.AUTHENTICATION,
-        ErrorSeverity.MEDIUM,
-        401,
-        'Authorization header is required. Please log in and try again.',
-        { hasAuthorization: !!authorization }
-      );
-    }
-
-    const idToken = authorization.split('Bearer ')[1];
-    if (!idToken) {
-      throw createAppError(
-        'Bearer token missing from authorization header',
-        ErrorCategory.AUTHENTICATION,
-        ErrorSeverity.MEDIUM,
-        401,
-        'Invalid authorization token format. Please log in again.',
-        { authorizationFormat: authorization.substring(0, 20) + '...' }
-      );
-    }
-
-    // Verify Firebase ID token with retry logic for network issues
-    let decodedToken;
-    try {
-      decodedToken = await withRetry(
-        () => auth().verifyIdToken(idToken),
-        { maxAttempts: 2, baseDelay: 500 },
-        context
-      );
-    } catch (authError: any) {
-      throw createAppError(
-        `Firebase token verification failed: ${authError.message}`,
+        `Firebase token verification failed: ${authResult.error}`,
         ErrorCategory.AUTHENTICATION,
         ErrorSeverity.MEDIUM,
         401,
         'Invalid or expired authentication token. Please log in again.',
-        { 
-          authErrorType: authError.constructor.name,
-          authErrorCode: authError.code 
-        }
+        { authError: authResult.error }
       );
     }
 
+    const decodedToken = authResult.user;
     const userEmail = decodedToken.email;
     const userId = decodedToken.uid;
 

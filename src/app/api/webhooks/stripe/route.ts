@@ -1,6 +1,6 @@
 
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/firebase-admin';
+import { db } from '../../../../../lib/firebase-admin-server.js';
 import { 
   verifyWebhookSignature, 
   extractWebhookEventData, 

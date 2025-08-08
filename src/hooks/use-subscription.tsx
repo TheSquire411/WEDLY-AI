@@ -17,7 +17,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { user } = useUser();
 
-  const isPremium = !!user?.premium;
+  const isPremium = !!user?.premium || !!user?.isAdmin;
 
   const openDialog = () => setIsDialogOpen(true);
   const closeDialog = () => setIsDialogOpen(false);

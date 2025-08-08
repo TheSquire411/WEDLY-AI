@@ -1,5 +1,6 @@
+
 import { config } from 'dotenv';
-config();
+config({ path: '.env.local' });
 
 import '@/ai/flows/budget-allocation-suggestions.ts';
 import '@/ai/flows/vow-generator.ts';

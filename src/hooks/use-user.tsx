@@ -69,9 +69,15 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
                         if (userDoc.exists()) {
                              const userData = { ...userDoc.data(), uid: firebaseUser.uid, email: firebaseUser.email } as UserData;
                             
+<<<<<<< HEAD
                             // Check for Admin override
                             if (process.env.NEXT_PUBLIC_ADMIN_EMAIL && userData.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL) {
                                 userData.isAdmin = true;
+=======
+                            userData.isAdmin = isAdmin;
+                            if (isAdmin) {
+                                userData.premium = true;
+>>>>>>> origin/changes
                             }
 
                             setUser(userData);

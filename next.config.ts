@@ -1,19 +1,32 @@
 import type { NextConfig } from 'next';
-require('dotenv').config({ path: './.env.local' });
 
 const nextConfig: NextConfig = {
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
   eslint: {
     ignoreDuringBuilds: true,
   },
+  // Fix for Next.js 15 - use serverExternalPackages instead of experimental.serverComponentsExternalPackages
+  serverExternalPackages: [
+    'firebase-admin',
+    '@opentelemetry/winston-transport',
+    '@opentelemetry/instrumentation-winston',
+    'genkit',
+    '@genkit-ai/core',
+    '@genkit-ai/googleai',
+    '@genkit-ai/firebase',
+    '@genkit-ai/google-cloud',
+  ],
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'placehold.co', port: '', pathname: '/**' },
       { protocol: 'https', hostname: 'api.qrserver.com', port: '', pathname: '/**' },
       { protocol: 'https', hostname: 'images.unsplash.com', port: '', pathname: '/**' },
       { protocol: 'https', hostname: 'i.imgur.com', port: '', pathname: '/**' },
+      // Add Firebase Storage domains
+      { protocol: 'https', hostname: '*.firebasestorage.app', port: '', pathname: '/**' },
+      { protocol: 'https', hostname: '*.googleapis.com', port: '', pathname: '/**' },
     ],
   },
   async headers() {
@@ -67,14 +80,57 @@ const nextConfig: NextConfig = {
   },
   webpack(config, { isServer }) {
     if (!isServer) {
+      // More comprehensive webpack fallbacks for client-side
       config.resolve.fallback = {
         ...config.resolve.fallback,
         fs: false,
         http2: false,
         stream: false,
         events: false,
+        crypto: false,
+        os: false,
+        path: false,
+        util: false,
+        buffer: false,
+        assert: false,
+        url: false,
+        querystring: false,
+        // OpenTelemetry and Firebase Admin fallbacks
+        'node:fs': false,
+        'node:http2': false,
+        'node:stream': false,
+        'node:events': false,
+        'node:crypto': false,
+        'node:os': false,
+        'node:path': false,
+        'node:util': false,
+        'node:buffer': false,
+        'node:assert': false,
+        'node:url': false,
+        'node:querystring': false,
       };
+      
+      // Ignore Node.js-specific modules on the client side
+      config.externals = config.externals || [];
+      config.externals.push({
+        'firebase-admin': 'commonjs firebase-admin',
+        '@opentelemetry/winston-transport': 'commonjs @opentelemetry/winston-transport',
+        '@opentelemetry/instrumentation-winston': 'commonjs @opentelemetry/instrumentation-winston',
+      });
     }
+    
+    // Handle handlebars compilation issues
+    config.module.rules.push({
+      test: /\.js$/,
+      include: /node_modules\/handlebars/,
+      use: {
+        loader: 'babel-loader',
+        options: {
+          presets: ['@babel/preset-env'],
+        },
+      },
+    });
+
     return config;
   },
 };

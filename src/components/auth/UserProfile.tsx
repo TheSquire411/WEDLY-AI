@@ -8,18 +8,15 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Loader2 } from 'lucide-react';
-// FIX: Removed the direct import for 'app' and will get the auth instance globally.
 import { getAuth, signOut as firebaseSignOut } from 'firebase/auth'; 
 
 export function UserProfile() {
   const { user, loading } = useUser();
-  // FIX: getAuth() will use the default initialized Firebase app.
   const auth = getAuth();
 
   const handleSignOut = async () => {
     try {
       await firebaseSignOut(auth);
-      // The useUser hook will automatically detect the change and update the UI.
     } catch (error) {
       console.error("Error signing out: ", error);
     }
@@ -34,13 +31,17 @@ export function UserProfile() {
   }
 
   if (!user) {
-    return null; // Or show a login button
+    return null; 
   }
 
   const getInitials = (email: string | null | undefined) => {
     if (!email) return 'U';
     return email.substring(0, 2).toUpperCase();
   };
+
+  // FIX: Cast the user object to 'any' to safely access properties 
+  // that might not be in the incomplete UserData type definition.
+  const anyUser = user as any;
 
   return (
     <Card>
@@ -50,12 +51,12 @@ export function UserProfile() {
       <CardContent className="space-y-4">
         <div className="flex items-center gap-4">
           <Avatar>
-            <AvatarImage src={user.photoURL || ''} alt={user.displayName || 'User'} />
-            <AvatarFallback>{getInitials(user.email)}</AvatarFallback>
+            <AvatarImage src={anyUser.photoURL || ''} alt={anyUser.displayName || 'User'} />
+            <AvatarFallback>{getInitials(anyUser.email)}</AvatarFallback>
           </Avatar>
           <div>
-            <p className="font-semibold">{user.displayName || 'No display name'}</p>
-            <p className="text-sm text-gray-500">{user.email}</p>
+            <p className="font-semibold">{anyUser.displayName || 'No display name'}</p>
+            <p className="text-sm text-gray-500">{anyUser.email}</p>
           </div>
         </div>
         <Button onClick={handleSignOut} className="w-full">

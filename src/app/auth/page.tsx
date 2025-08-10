@@ -1,85 +1,58 @@
-'use client';
+// src/app/auth/page.tsx
 
-import React, { useState } from 'react';
+"use client";
+
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '../../components/auth/AuthProvider';
-import LoginForm from '../../components/auth/LoginForm';
-import SignupForm from '../../components/auth/SignupForm';
-import { Button } from '../../components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
+import { useAuth } from '@/hooks/use-auth'; // Assuming this is your auth hook
+import { Loader2 } from 'lucide-react';
+import { LoginTab } from '@/components/auth/login-tab'; // Assuming you have these components
+import { SignupTab } from '@/components/auth/signup-tab'; // Assuming you have these components
 
 export default function AuthPage() {
-  const { isAuthenticated, loading } = useAuth();
+  // FIX: Destructure 'user' instead of 'isAuthenticated'
+  const { user, loading } = useAuth(); 
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('login');
 
-  // Redirect if already authenticated
-  React.useEffect(() => {
-    if (!loading && isAuthenticated) {
+  useEffect(() => {
+    // If loading is finished and the user object exists, they are authenticated.
+    // Redirect them to the dashboard.
+    if (!loading && user) {
       router.push('/dashboard');
     }
-  }, [isAuthenticated, loading, router]);
+  }, [user, loading, router]);
 
-  const handleAuthSuccess = () => {
-    router.push('/dashboard');
-  };
-
-  if (loading) {
+  // While checking auth state, show a loader.
+  // Also, if the user is logged in, this will show briefly before the redirect.
+  if (loading || user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Card className="w-full max-w-md">
-          <CardContent className="p-8 text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading...</p>
-          </CardContent>
-        </Card>
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-12 w-12 animate-spin" />
       </div>
     );
   }
 
-  if (isAuthenticated) {
-    return null; // Will redirect
-  }
-
+  // If the user is not logged in, show the auth forms.
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="w-full max-w-md space-y-8">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900">Wedly</h1>
-          <p className="mt-2 text-gray-600">Your wedding planning companion</p>
-        </div>
-
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="login">Sign In</TabsTrigger>
-            <TabsTrigger value="signup">Sign Up</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="login" className="mt-6">
-            <LoginForm
-              onSuccess={handleAuthSuccess}
-              onSwitchToSignup={() => setActiveTab('signup')}
-            />
-          </TabsContent>
-          
-          <TabsContent value="signup" className="mt-6">
-            <SignupForm
-              onSuccess={handleAuthSuccess}
-              onSwitchToLogin={() => setActiveTab('login')}
-            />
-          </TabsContent>
-        </Tabs>
-
-        <div className="text-center">
-          <Button
-            variant="link"
-            onClick={() => router.push('/')}
-            className="text-sm text-gray-500"
+    <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 p-4">
+      <div className="w-full max-w-md">
+        <div className="mb-4 flex border-b">
+          <button
+            onClick={() => setActiveTab('login')}
+            className={`flex-1 py-2 text-center font-medium ${activeTab === 'login' ? 'border-b-2 border-primary text-primary' : 'text-gray-500'}`}
           >
-            ← Back to Home
-          </Button>
+            Login
+          </button>
+          <button
+            onClick={() => setActiveTab('signup')}
+            className={`flex-1 py-2 text-center font-medium ${activeTab === 'signup' ? 'border-b-2 border-primary text-primary' : 'text-gray-500'}`}
+          >
+            Sign Up
+          </button>
         </div>
+        
+        {activeTab === 'login' ? <LoginTab /> : <SignupTab />}
       </div>
     </div>
   );

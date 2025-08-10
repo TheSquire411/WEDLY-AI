@@ -1,97 +1,38 @@
-'use client';
+// src/components/auth/ProtectedRoute.tsx
 
-import React, { ReactNode } from 'react';
+"use client";
+
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from './AuthProvider';
-import { Card, CardContent } from '../ui/card';
+import { useUser } from '@/hooks/use-user'; // Use the correct hook
 import { Loader2 } from 'lucide-react';
 
-interface ProtectedRouteProps {
-  children: ReactNode;
-  redirectTo?: string;
-  requirePremium?: boolean;
-  fallback?: ReactNode;
-}
+type ProtectedRouteProps = {
+  children: React.ReactNode;
+  fallback?: string; // Optional fallback route
+};
 
-export default function ProtectedRoute({ 
-  children, 
-  redirectTo = '/auth/login',
-  requirePremium = false,
-  fallback 
-}: ProtectedRouteProps) {
-  const { user, userData, loading, isAuthenticated } = useAuth();
+export function ProtectedRoute({ children, fallback = '/auth' }: ProtectedRouteProps) {
+  // FIX: Destructure only the properties that actually exist: 'user' and 'loading'
+  const { user, loading } = useUser();
   const router = useRouter();
 
-  // Show loading state while authentication is being determined
-  if (loading) {
-    return fallback || (
-      <div className="flex items-center justify-center min-h-screen">
-        <Card className="w-full max-w-md">
-          <CardContent className="flex items-center justify-center p-8">
-            <div className="text-center space-y-4">
-              <Loader2 className="h-8 w-8 animate-spin mx-auto" />
-              <p className="text-sm text-gray-600">Loading...</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  useEffect(() => {
+    // If loading is finished and there is NO user, redirect to the fallback page
+    if (!loading && !user) {
+      router.push(fallback);
+    }
+  }, [user, loading, router, fallback]);
 
-  // Redirect to login if not authenticated
-  if (!isAuthenticated) {
-    router.push(redirectTo);
-    return null;
-  }
-
-  // Check premium requirement
-  if (requirePremium && userData && !userData.premium) {
+  // While checking for a user, show a loading spinner
+  if (loading || !user) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Card className="w-full max-w-md">
-          <CardContent className="p-8 text-center space-y-4">
-            <h2 className="text-xl font-semibold">Premium Required</h2>
-            <p className="text-gray-600">
-              This feature requires a premium subscription. Please upgrade your account to continue.
-            </p>
-            <button
-              onClick={() => router.push('/upgrade')}
-              className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
-            >
-              Upgrade to Premium
-            </button>
-          </CardContent>
-        </Card>
+      <div className="flex h-screen w-full items-center justify-center">
+        <Loader2 className="h-12 w-12 animate-spin" />
       </div>
     );
   }
 
+  // If loading is finished and a user exists, show the protected content
   return <>{children}</>;
-}
-
-/**
- * Higher-order component for protecting pages
- * @param Component - The component to protect
- * @param options - Protection options
- * @returns Protected component
- */
-export function withAuth<P extends object>(
-  Component: React.ComponentType<P>,
-  options: {
-    redirectTo?: string;
-    requirePremium?: boolean;
-    fallback?: ReactNode;
-  } = {}
-) {
-  const ProtectedComponent = (props: P) => {
-    return (
-      <ProtectedRoute {...options}>
-        <Component {...props} />
-      </ProtectedRoute>
-    );
-  };
-
-  ProtectedComponent.displayName = `withAuth(${Component.displayName || Component.name})`;
-  
-  return ProtectedComponent;
 }

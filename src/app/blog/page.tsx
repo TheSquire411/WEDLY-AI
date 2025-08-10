@@ -1,7 +1,7 @@
 // src/app/blog/page.tsx
 
 import Link from 'next/link';
-// Force a new build
+
 // This function would fetch a list of all your blog posts
 async function getAllPosts() {
   // Replace this with your actual data fetching logic

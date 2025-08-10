@@ -4,29 +4,59 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-// FIX: Changed useAuth back to useUser, which is used elsewhere in your app.
 import { useUser } from '@/hooks/use-user'; 
 import { Loader2 } from 'lucide-react';
-// NOTE: Please ensure these files exist at the specified paths
-import { LoginTab } from '@/components/auth/login-tab'; 
-import { SignupTab } from '@/components/auth/signup-tab';
+import { Button } from '@/components/ui/button'; // Added for the placeholder forms
+import { Input } from '@/components/ui/input';   // Added for the placeholder forms
+import { Label } from '@/components/ui/label';   // Added for the placeholder forms
+
+// FIX: Created placeholder components directly in this file to resolve module errors.
+// You can replace the content of these with your actual form components.
+
+function LoginTab() {
+  return (
+    <div className="space-y-4">
+      <div>
+        <Label htmlFor="email">Email</Label>
+        <Input id="email" type="email" placeholder="m@example.com" />
+      </div>
+      <div>
+        <Label htmlFor="password">Password</Label>
+        <Input id="password" type="password" />
+      </div>
+      <Button className="w-full">Login</Button>
+    </div>
+  );
+}
+
+function SignupTab() {
+  return (
+    <div className="space-y-4">
+      <div>
+        <Label htmlFor="email-signup">Email</Label>
+        <Input id="email-signup" type="email" placeholder="m@example.com" />
+      </div>
+      <div>
+        <Label htmlFor="password-signup">Password</Label>
+        <Input id="password-signup" type="password" />
+      </div>
+      <Button className="w-full">Create Account</Button>
+    </div>
+  );
+}
+
 
 export default function AuthPage() {
-  // Use the correct hook
   const { user, loading } = useUser(); 
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('login');
 
   useEffect(() => {
-    // If loading is finished and the user object exists, they are authenticated.
-    // Redirect them to the dashboard.
     if (!loading && user) {
       router.push('/dashboard');
     }
   }, [user, loading, router]);
 
-  // While checking auth state, show a loader.
-  // Also, if the user is logged in, this will show briefly before the redirect.
   if (loading || user) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -35,20 +65,19 @@ export default function AuthPage() {
     );
   }
 
-  // If the user is not logged in, show the auth forms.
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 p-4">
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-md rounded-lg border bg-white p-6 shadow-sm">
         <div className="mb-4 flex border-b">
           <button
             onClick={() => setActiveTab('login')}
-            className={`flex-1 py-2 text-center font-medium ${activeTab === 'login' ? 'border-b-2 border-primary text-primary' : 'text-gray-500'}`}
+            className={`flex-1 py-2 text-center font-medium transition-colors ${activeTab === 'login' ? 'border-b-2 border-primary text-primary' : 'text-gray-500 hover:text-gray-700'}`}
           >
             Login
           </button>
           <button
             onClick={() => setActiveTab('signup')}
-            className={`flex-1 py-2 text-center font-medium ${activeTab === 'signup' ? 'border-b-2 border-primary text-primary' : 'text-gray-500'}`}
+            className={`flex-1 py-2 text-center font-medium transition-colors ${activeTab === 'signup' ? 'border-b-2 border-primary text-primary' : 'text-gray-500 hover:text-gray-700'}`}
           >
             Sign Up
           </button>

@@ -4,14 +4,16 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/hooks/use-auth'; // Assuming this is your auth hook
+// FIX: Changed useAuth back to useUser, which is used elsewhere in your app.
+import { useUser } from '@/hooks/use-user'; 
 import { Loader2 } from 'lucide-react';
-import { LoginTab } from '@/components/auth/login-tab'; // Assuming you have these components
-import { SignupTab } from '@/components/auth/signup-tab'; // Assuming you have these components
+// NOTE: Please ensure these files exist at the specified paths
+import { LoginTab } from '@/components/auth/login-tab'; 
+import { SignupTab } from '@/components/auth/signup-tab';
 
 export default function AuthPage() {
-  // FIX: Destructure 'user' instead of 'isAuthenticated'
-  const { user, loading } = useAuth(); 
+  // Use the correct hook
+  const { user, loading } = useUser(); 
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('login');
 

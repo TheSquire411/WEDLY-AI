@@ -8,13 +8,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Loader2 } from 'lucide-react';
-import { getAuth, signOut as firebaseSignOut } from 'firebase/auth'; // Import Firebase auth functions
-import { app } from '@/lib/firebase-client'; // Assuming this is the path to your initialized Firebase app
+// FIX: Removed the direct import for 'app' and will get the auth instance globally.
+import { getAuth, signOut as firebaseSignOut } from 'firebase/auth'; 
 
 export function UserProfile() {
-  // FIX: Removed 'signOut' from the hook, as it doesn't provide it.
   const { user, loading } = useUser();
-  const auth = getAuth(app);
+  // FIX: getAuth() will use the default initialized Firebase app.
+  const auth = getAuth();
 
   const handleSignOut = async () => {
     try {
@@ -58,7 +58,6 @@ export function UserProfile() {
             <p className="text-sm text-gray-500">{user.email}</p>
           </div>
         </div>
-        {/* FIX: Call the new handleSignOut function on click */}
         <Button onClick={handleSignOut} className="w-full">
           Sign Out
         </Button>

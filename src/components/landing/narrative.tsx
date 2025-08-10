@@ -1,38 +1,45 @@
-
-import Image from 'next/image';
+import { Users, Heart, Gift } from 'lucide-react';
 
 export function Narrative() {
   return (
     <section className="bg-white">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="relative isolate overflow-hidden bg-background shadow-xl rounded-2xl">
-          <div className="grid grid-cols-1 lg:grid-cols-2">
-             <div className="relative min-h-[300px] lg:min-h-[500px]">
-                 <Image
-                    src="https://images.unsplash.com/photo-1606216794079-73f85bbd57d5?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-                    alt="A happy couple laughing together outdoors"
-                    data-ai-hint="happy couple"
-                    fill
-                    sizes="(max-width: 1024px) 100vw, 50vw"
-                    className="object-cover"
-                />
+      <div className="container mx-auto px-4 py-20 sm:px-6 lg:px-8">
+        <div className="text-center">
+          <p className="text-primary font-semibold">The Wedly Way</p>
+          <h2 className="mt-2 text-3xl font-headline font-bold tracking-tight text-gray-900 sm:text-4xl">
+            From "Yes" to "I Do" with Ease
+          </h2>
+          <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-gray-600">
+            Wedding planning can be overwhelming. We built Wedly to be your trusted companion, using AI to streamline tasks so you can focus on what truly matters: celebrating your love.
+          </p>
+        </div>
+        <div className="mt-16 grid grid-cols-1 gap-y-10 md:grid-cols-3 md:gap-x-8">
+          <div className="text-center">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-primary text-white">
+              <Users className="h-6 w-6" />
             </div>
-            <div className="p-8 sm:p-12 lg:p-16 flex items-center">
-              <div className="max-w-xl">
-                <h2 className="text-4xl font-headline font-bold text-gray-900 sm:text-5xl">
-                  Remember the "Yes"? Let's Get Back to That Feeling.
-                </h2>
-                <p className="mt-6 text-lg text-gray-600">
-                  The "happiest time of your life" can quickly become consumed by invoices, seating charts, and endless to-do lists. The joy gets buried under admin.
-                </p>
-                <p className="mt-4 text-lg text-gray-600">
-                  Now, imagine a different path. A path where you and your partner spend your evenings dreaming up your vision, not debating budget lines. Where crafting your vows is a moment of connection, not a stressful homework assignment. Where you can focus on each other, knowing the details are handled.
-                </p>
-                <p className="mt-8 text-xl font-semibold text-gray-800">
-                  Wedly gives you back your engagement.
-                </p>
-              </div>
+            <h3 className="mt-6 text-lg font-medium text-gray-900">For You & Your Partner</h3>
+            <p className="mt-2 text-base text-gray-600">
+              Collaborate on your vision, manage tasks together, and keep everything in sync.
+            </p>
+          </div>
+          <div className="text-center">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-primary text-white">
+              <Heart className="h-6 w-6" />
             </div>
+            <h3 className="mt-6 text-lg font-medium text-gray-900">Personalized Experience</h3>
+            <p className="mt-2 text-base text-gray-600">
+              Our AI learns about your style and preferences to offer tailored suggestions.
+            </p>
+          </div>
+          <div className="text-center">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-primary text-white">
+              <Gift className="h-6 w-6" />
+            </div>
+            <h3 className="mt-6 text-lg font-medium text-gray-900">All-in-One Toolkit</h3>
+            <p className="mt-2 text-base text-gray-600">
+              Budgeting, guest lists, vendor tracking - everything you need is right here.
+            </p>
           </div>
         </div>
       </div>

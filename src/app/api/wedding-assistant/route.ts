@@ -6,21 +6,21 @@ import {
   extractRequestContext, 
   validateRequired,
   withRetry
-} from '../../../../lib/errorHandler';
+} from '@/lib/errorHandler';
 import { 
   validateRequestBody, 
   ValidationSchemas 
-} from '../../../../lib/validation';
+} from '@/lib/validation';
 import { 
   withRateLimit, 
   RateLimitConfigs,
   getRateLimitHeaders 
-} from '../../../../lib/rateLimiting';
+} from '@/lib/rateLimiting';
 import { 
   createSecureResponse,
   withSecurity,
   handlePreflight 
-} from '../../../../lib/security';
+} from '@/lib/security';
 
 // Handle preflight OPTIONS requests
 export async function OPTIONS(request: Request) {

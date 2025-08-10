@@ -56,7 +56,7 @@ if (!getApps().length) {
 // Initialize Firebase Admin services
 export const adminAuth = getAuth(adminApp);
 export const adminDb = getFirestore(adminApp);
-export const adminApp as admin = adminApp;
+export { adminApp as admin };
 
 // Helper functions for common operations
 export async function verifyIdToken(idToken) {

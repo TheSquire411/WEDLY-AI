@@ -2,7 +2,7 @@
 "use client";
 
 import { loadStripe, Stripe } from '@stripe/stripe-js';
-import { public as publicConfig } from '../../lib/config.js';
+import { public as publicConfig } from '@/lib/config';
 
 // This is a singleton to ensure we only load Stripe once.
 let stripePromise: Promise<Stripe | null>;

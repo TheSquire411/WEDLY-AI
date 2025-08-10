@@ -1,4 +1,5 @@
 'use server';
+import 'server-only';
 
 /**
  * @fileOverview Provides image search functionality via the Unsplash API.
@@ -12,8 +13,9 @@ import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { createApi } from 'unsplash-js';
 
+// ---------- Schemas ----------
 const UnsplashImageSearchInputSchema = z.object({
-  query: z.string().describe('The search query for images.'),
+  query: z.string().min(1, 'Query is required').describe('The search query for images.'),
 });
 export type UnsplashImageSearchInput = z.infer<typeof UnsplashImageSearchInputSchema>;
 
@@ -35,6 +37,23 @@ const UnsplashImageSearchOutputSchema = z.object({
 });
 export type UnsplashImageSearchOutput = z.infer<typeof UnsplashImageSearchOutputSchema>;
 
+// ---------- Env & Client (server-side only) ----------
+const accessKey =
+  process.env.UNSPLASH_ACCESS_KEY ??
+  // Optional fallback for dev if someone still has the public var set.
+  process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY ??
+  '';
+
+if (!accessKey) {
+  // Fail fast on the server; easier to catch during build/previews
+  throw new Error(
+    'Unsplash API key is not configured. Set UNSPLASH_ACCESS_KEY in your environment.'
+  );
+}
+
+const unsplash = createApi({ accessKey });
+
+// ---------- Public API ----------
 export async function unsplashImageSearch(
   input: UnsplashImageSearchInput
 ): Promise<UnsplashImageSearchOutput> {
@@ -48,14 +67,14 @@ const unsplashImageSearchFlow = ai.defineFlow(
     outputSchema: UnsplashImageSearchOutputSchema,
   },
   async (input) => {
-    if (!process.env.UNSPLASH_ACCESS_KEY) {
-      throw new Error('Unsplash API key is not configured.');
+    // Basic query normalization
+    const q = input.query.trim();
+    if (!q) {
+      return { images: [] };
     }
-    
-    const unsplash = createApi({ accessKey: process.env.UNSPLASH_ACCESS_KEY });
 
     const result = await unsplash.search.getPhotos({
-      query: input.query,
+      query: q,
       perPage: 20,
       orientation: 'squarish',
     });
@@ -65,17 +84,18 @@ const unsplashImageSearchFlow = ai.defineFlow(
       throw new Error('Failed to fetch images from Unsplash.');
     }
 
-    // Map the response to our schema
-    const images: UnsplashImage[] = result.response.results.map(photo => ({
-        id: photo.id,
-        alt_description: photo.alt_description,
-        urls: {
-            regular: photo.urls.regular,
-            thumb: photo.urls.thumb,
-        },
-        user: {
-            name: photo.user.name,
-        }
+    const photos = result.response?.results ?? [];
+
+    const images: UnsplashImage[] = photos.map((photo) => ({
+      id: photo.id,
+      alt_description: photo.alt_description,
+      urls: {
+        regular: photo.urls.regular,
+        thumb: photo.urls.thumb,
+      },
+      user: {
+        name: photo.user.name,
+      },
     }));
 
     return { images };

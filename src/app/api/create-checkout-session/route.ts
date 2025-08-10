@@ -1,7 +1,7 @@
 
 import { NextResponse } from 'next/server';
-import { verifyAuthToken } from '../../../../lib/auth-server.js';
-import { createCheckoutSession } from '../../../../lib/stripeServer.js';
+import { verifyAuthToken } from '@/lib/auth-server';
+import { createCheckoutSession } from '@/lib/stripeServer';
 import { 
   createErrorResponse, 
   extractRequestContext, 
@@ -10,22 +10,23 @@ import {
   ErrorCategory,
   ErrorSeverity,
   withRetry
-} from '../../../../lib/errorHandler';
+} from '@/lib/errorHandler';
 import { 
   validateRequestBody, 
   ValidationSchemas,
   isValidEmail 
-} from '../../../../lib/validation';
+} from '@/lib/validation';
 import { 
   withRateLimit, 
   RateLimitConfigs,
   getRateLimitHeaders 
-} from '../../../../lib/rateLimiting';
+} from '@/lib/rateLimiting';
 import { 
   createSecureResponse,
   withSecurity,
   handlePreflight 
-} from '../../../../lib/security';
+} from '@/lib/security';
+import { DecodedIdToken } from 'firebase-admin/auth';
 
 // Handle preflight OPTIONS requests
 export async function OPTIONS(request: Request) {
@@ -67,7 +68,17 @@ export async function POST(request: Request) {
       );
     }
 
-    const decodedToken = authResult.user;
+    if (!authResult.user) {
+      throw createAppError(
+        `Authentication failed: User object is null`,
+        ErrorCategory.AUTHENTICATION,
+        ErrorSeverity.MEDIUM,
+        401,
+        'Authentication failed. User data not found.',
+        { authResult }
+      );
+    }
+    const decodedToken: DecodedIdToken = authResult.user as DecodedIdToken;
     const userEmail = decodedToken.email;
     const userId = decodedToken.uid;
 

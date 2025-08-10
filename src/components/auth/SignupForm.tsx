@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { signUpWithEmail, isValidEmail, validatePassword } from '../../../lib/auth';
+import { signUpWithEmail, isValidEmail, validatePassword } from '@/lib/client-auth-utils';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';

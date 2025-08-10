@@ -5,7 +5,7 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 // Import centralized configuration
-const { public: publicConfig } = require("../../lib/config.js");
+import { public as publicConfig } from '@/lib/config';
 
 // Get Firebase configuration from centralized config
 const firebaseConfig = publicConfig.firebase;

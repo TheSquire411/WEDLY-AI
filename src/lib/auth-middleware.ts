@@ -9,7 +9,7 @@ export interface AuthenticatedRequest extends NextRequest {
     uid: string;
     email?: string;
     [key: string]: any;
-  };
+  } | null;
 }
 
 export async function withAuth(
@@ -35,8 +35,6 @@ export async function withAuth(
       
       // Add user info to request
       (request as AuthenticatedRequest).user = {
-        uid: decodedToken.uid,
-        email: decodedToken.email,
         ...decodedToken,
       };
 
@@ -65,8 +63,6 @@ export async function getAuthenticatedUser(request: NextRequest) {
     const decodedToken = await adminAuth.verifyIdToken(token);
     
     return {
-      uid: decodedToken.uid,
-      email: decodedToken.email,
       ...decodedToken,
     };
   } catch (error) {

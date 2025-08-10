@@ -1,44 +1,11 @@
-
 import { NextResponse } from 'next/server';
-<<<<<<< HEAD
-import { db } from '../../../../../lib/firebase-admin-server.js';
-import { 
-  verifyWebhookSignature, 
-  extractWebhookEventData, 
-  retrieveCheckoutSession,
-  retrievePaymentIntent 
-} from '../../../../../lib/stripeServer.js';
-import { 
-  sendPurchaseConfirmationEmail, 
-  formatCurrency, 
-  formatEmailDate,
-  type EmailData,
-  type EmailResult
-} from '../../../../../lib/email';
-import { 
-  createErrorResponse, 
-  extractRequestContext, 
-  createAppError,
-  ErrorCategory,
-  ErrorSeverity,
-  withDatabaseRetry,
-  logError
-} from '../../../../../lib/errorHandler';
-import { 
-  withRateLimit, 
-  RateLimitConfigs,
-  getAdaptiveRateLimit,
-  getRateLimitHeaders 
-} from '../../../../../lib/rateLimiting';
-import { 
-  createSecureResponse,
-  withSecurity,
-  handlePreflight 
-} from '../../../../../lib/security';
-=======
 import Stripe from 'stripe';
 import { db } from '@/lib/firebase-admin'; // Using admin SDK for server-side database operations
->>>>>>> origin/changes
+import { handlePreflight, createSecureResponse, withSecurity } from '@/lib/security';
+import { extractRequestContext, createAppError, ErrorCategory, ErrorSeverity, logError, createErrorResponse, withDatabaseRetry } from '@/lib/errorHandler';
+import { getAdaptiveRateLimit, RateLimitConfigs, getRateLimitHeaders, withRateLimit } from '@/lib/rateLimiting';
+import { verifyWebhookSignature, extractWebhookEventData, retrieveCheckoutSession, retrievePaymentIntent } from '@/lib/stripeServer';
+import { sendPurchaseConfirmationEmail, formatCurrency, formatEmailDate } from '@/lib/email';
 
 /**
  * Enhanced Stripe Webhook Handler
@@ -70,45 +37,12 @@ export async function POST(request: Request) {
   let eventType: string | undefined;
 
   try {
-<<<<<<< HEAD
     // Apply security middleware for webhooks
     const securityResult = withSecurity({
       endpointType: 'webhook',
       requireOriginValidation: false, // Webhooks come from Stripe, not browsers
       detectSuspicious: true,
     })(request, context);
-=======
-    const body = await request.text();
-    const signature = request.headers.get('stripe-signature')!;
-
-    let event: Stripe.Event;
-
-    try {
-      event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
-    } catch (err: any) {
-      console.error(`❌ Error message: ${err.message}`);
-      return new NextResponse(`Webhook Error: ${err.message}`, { status: 400 });
-    }
-
-    // Handle the checkout.session.completed event
-    if (event.type === 'checkout.session.completed') {
-      const session = event.data.object as Stripe.Checkout.Session;
-
-      const userId = session.client_reference_id;
-
-      if (!userId) {
-        throw new Error('No user ID found in session.');
-      }
-      
-      // Update the user's record in Firestore to mark them as 'premium'
-      const userDocRef = db.collection('users').doc(userId);
-      await userDocRef.update({ premium: true });
-
-      console.log(`Successfully granted premium access to user: ${userId}`);
-    }
-
-    return new NextResponse(JSON.stringify({ received: true }), { status: 200 });
->>>>>>> origin/changes
     
     // Apply adaptive rate limiting for webhooks (more lenient for Stripe)
     const adaptiveConfig = getAdaptiveRateLimit(request, RateLimitConfigs.webhook);
@@ -414,7 +348,7 @@ async function processCheckoutSessionCompleted(eventData: any, idempotencyKey: s
 
   try {
     // Save purchase record to Firestore with retry logic
-    const purchaseRef = db().collection('purchases').doc();
+    const purchaseRef = db.collection('purchases').doc();
     await withDatabaseRetry(
       () => purchaseRef.set(purchaseRecord),
       context
@@ -519,7 +453,7 @@ async function sendConfirmationEmail(purchaseRecord: any, purchaseId: string, co
       // Optionally update purchase record with email status
       try {
         await withDatabaseRetry(
-          () => db().collection('purchases').doc(purchaseId).update({
+          () => db.collection('purchases').doc(purchaseId).update({
             emailSent: true,
             emailSentAt: new Date(),
             emailMessageId: emailResult.messageId,
@@ -554,7 +488,7 @@ async function sendConfirmationEmail(purchaseRecord: any, purchaseId: string, co
       // Update purchase record with email failure status
       try {
         await withDatabaseRetry(
-          () => db().collection('purchases').doc(purchaseId).update({
+        () => db.collection('purchases').doc(purchaseId).update({
             emailSent: false,
             emailError: emailResult.error,
             emailAttemptedAt: new Date(),
@@ -590,7 +524,7 @@ async function sendConfirmationEmail(purchaseRecord: any, purchaseId: string, co
     // Update purchase record with email failure status
     try {
       await withDatabaseRetry(
-        () => db().collection('purchases').doc(purchaseId).update({
+        () => db.collection('purchases').doc(purchaseId).update({
           emailSent: false,
           emailError: error.message,
           emailAttemptedAt: new Date(),
@@ -617,7 +551,7 @@ async function sendConfirmationEmail(purchaseRecord: any, purchaseId: string, co
 async function updateUserPremiumStatus(userEmail: string, purchaseId: string, amount: number, context: any) {
   try {
     // Query for user by email
-    const usersQuery = await db().collection('users')
+    const usersQuery = await db.collection('users')
       .where('email', '==', userEmail)
       .limit(1)
       .get();
@@ -679,7 +613,7 @@ async function updateUserPremiumStatus(userEmail: string, purchaseId: string, am
  */
 async function checkIdempotency(idempotencyKey: string) {
   try {
-    const doc = await db().collection('webhook_processing')
+    const doc = await db.collection('webhook_processing')
       .doc(idempotencyKey)
       .get();
     
@@ -707,7 +641,7 @@ async function checkIdempotency(idempotencyKey: string) {
  */
 async function markEventProcessing(idempotencyKey: string, eventId: string, eventType: string) {
   try {
-    await db().collection('webhook_processing')
+    await db.collection('webhook_processing')
       .doc(idempotencyKey)
       .set({
         eventId,
@@ -741,7 +675,7 @@ async function markEventCompleted(idempotencyKey: string, status: string, errorM
       updateData.errorMessage = errorMessage;
     }
     
-    await db().collection('webhook_processing')
+    await db.collection('webhook_processing')
       .doc(idempotencyKey)
       .update(updateData);
   } catch (error: any) {
@@ -752,5 +686,3 @@ async function markEventCompleted(idempotencyKey: string, status: string, errorM
     });
   }
 }
-
-

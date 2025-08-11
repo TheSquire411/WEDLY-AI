@@ -1,11 +1,18 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { db } from '@/lib/firebase-admin'; // Using admin SDK for server-side database operations
+import { getAdminApp } from '@/lib/firebase-admin';
+import { getFirestore } from 'firebase-admin/firestore';
 import { handlePreflight, createSecureResponse, withSecurity } from '@/lib/security';
 import { extractRequestContext, createAppError, ErrorCategory, ErrorSeverity, logError, createErrorResponse, withDatabaseRetry } from '@/lib/errorHandler';
 import { getAdaptiveRateLimit, RateLimitConfigs, getRateLimitHeaders, withRateLimit } from '@/lib/rateLimiting';
 import { verifyWebhookSignature, extractWebhookEventData, retrieveCheckoutSession, retrievePaymentIntent } from '@/lib/stripeServer';
 import { sendPurchaseConfirmationEmail, formatCurrency, formatEmailDate } from '@/lib/email';
+
+const adminApp = getAdminApp();
+if (!adminApp) {
+  throw new Error('Firebase Admin SDK not initialized. Check environment variables.');
+}
+const db = getFirestore(adminApp);
 
 /**
  * Enhanced Stripe Webhook Handler

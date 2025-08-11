@@ -4,7 +4,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { 
+import {
   User,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -13,11 +13,11 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   sendPasswordResetEmail,
-  updateProfile
+  updateProfile,
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase-config'; // Client-side Firebase config
 
-interface AuthContextType {
+export interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
@@ -37,7 +37,7 @@ export function useAuth() {
   return context;
 }
 
-interface AuthProviderProps {
+export interface AuthProviderProps {
   children: ReactNode;
 }
 
@@ -46,11 +46,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
+    const unsubscribe = onAuthStateChanged(auth, (u) => {
+      setUser(u);
       setLoading(false);
     });
-
     return unsubscribe;
   }, []);
 
@@ -66,7 +65,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const register = async (email: string, password: string, displayName?: string) => {
     try {
       const { user } = await createUserWithEmailAndPassword(auth, email, password);
-      
       if (displayName && user) {
         await updateProfile(user, { displayName });
       }
@@ -114,9 +112,5 @@ export function AuthProvider({ children }: AuthProviderProps) {
     resetPassword,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

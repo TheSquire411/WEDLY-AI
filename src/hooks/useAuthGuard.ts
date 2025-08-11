@@ -1,8 +1,11 @@
+// src/hooks/useAuthGuard.ts
 'use client';
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../components/auth/AuthProvider';
+
+type UserData = { premium?: boolean } | null; // placeholder until you wire real profile data
 
 interface UseAuthGuardOptions {
   redirectTo?: string;
@@ -12,56 +15,46 @@ interface UseAuthGuardOptions {
   onPremiumRequired?: () => void;
 }
 
-/**
- * Hook for protecting routes and handling authentication requirements
- * @param options - Configuration options for the auth guard
- * @returns Auth state and helper functions
- */
 export function useAuthGuard(options: UseAuthGuardOptions = {}) {
   const {
     redirectTo = '/auth',
     requireAuth = true,
     requirePremium = false,
     onAuthRequired,
-    onPremiumRequired
+    onPremiumRequired,
   } = options;
 
-  const { user, userData, loading, isAuthenticated } = useAuth();
+  const { user, loading } = useAuth();
   const router = useRouter();
 
+  const isAuthenticated = !!user;
+
+  // TODO: replace with real profile fetch (Firestore/Supabase/etc.)
+  const userData: UserData = user ? { premium: false } : null; // placeholder userData
+  const isPremiumUser = !!userData?.premium;
+
   useEffect(() => {
-    // Don't do anything while loading
     if (loading) return;
 
-    // Check authentication requirement
     if (requireAuth && !isAuthenticated) {
-      if (onAuthRequired) {
-        onAuthRequired();
-      } else {
-        router.push(redirectTo);
-      }
+      onAuthRequired?.() ?? router.push(redirectTo);
       return;
     }
 
-    // Check premium requirement
-    if (requirePremium && isAuthenticated && userData && !userData.premium) {
-      if (onPremiumRequired) {
-        onPremiumRequired();
-      } else {
-        router.push('/upgrade');
-      }
+    if (requirePremium && isAuthenticated && !isPremiumUser) {
+      onPremiumRequired?.() ?? router.push('/upgrade');
       return;
     }
   }, [
     loading,
     isAuthenticated,
-    userData,
+    isPremiumUser,
     requireAuth,
     requirePremium,
     redirectTo,
     onAuthRequired,
     onPremiumRequired,
-    router
+    router,
   ]);
 
   return {
@@ -69,35 +62,26 @@ export function useAuthGuard(options: UseAuthGuardOptions = {}) {
     userData,
     loading,
     isAuthenticated,
-    isPremium: userData?.premium || false,
-    canAccess: loading ? false : (
+    isPremium: isPremiumUser,
+    canAccess:
+      !loading &&
       (!requireAuth || isAuthenticated) &&
-      (!requirePremium || (userData?.premium || false))
-    )
+      (!requirePremium || isPremiumUser),
   };
 }
 
-/**
- * Hook specifically for premium features
- * @param onUpgradeRequired - Callback when upgrade is needed
- * @returns Premium status and helper functions
- */
 export function usePremiumGuard(onUpgradeRequired?: () => void) {
   return useAuthGuard({
     requireAuth: true,
     requirePremium: true,
-    onPremiumRequired: onUpgradeRequired
+    onPremiumRequired: onUpgradeRequired,
   });
 }
 
-/**
- * Hook for pages that should redirect authenticated users away
- * @param redirectTo - Where to redirect authenticated users
- * @returns Auth state
- */
 export function useGuestGuard(redirectTo: string = '/dashboard') {
-  const { user, userData, loading, isAuthenticated } = useAuth();
+  const { user, loading } = useAuth();
   const router = useRouter();
+  const isAuthenticated = !!user;
 
   useEffect(() => {
     if (!loading && isAuthenticated) {
@@ -107,9 +91,8 @@ export function useGuestGuard(redirectTo: string = '/dashboard') {
 
   return {
     user,
-    userData,
     loading,
     isAuthenticated,
-    canAccess: loading ? false : !isAuthenticated
+    canAccess: !loading && !isAuthenticated,
   };
 }

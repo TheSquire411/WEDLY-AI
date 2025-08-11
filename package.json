@@ -79,6 +79,7 @@
     "eslint": "9.32.0",
     "eslint-config-next": "15.4.6",
     "genkit-cli": "^1.14.1",
+    "msw": "^2.10.4",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
     "tsx": "^4.19.2",

@@ -19,7 +19,7 @@ export default function LoginForm({ onSuccess, onSwitchToSignup }: LoginFormProp
     email: '',
     password: ''
   });
-  const [errors, setErrors] = useState<{[key: string]: string}>({});
+ const [errors, setErrors] = useState<Record<string, string>>({})
   const [isLoading, setIsLoading] = useState(false);
   const [authError, setAuthError] = useState('');
 

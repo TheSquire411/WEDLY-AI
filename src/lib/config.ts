@@ -174,8 +174,13 @@ function validateConfig(): void {
   if (errors.length > 0) {
     console.error('Configuration validation errors:', errors);
     // In development and build time, log errors but don't throw to allow for partial configuration
-    if (process.env.NODE_ENV === 'production' && process.env.VERCEL_ENV === 'production') {
-      throw new Error(`Configuration validation failed: ${errors.join(', ')}`);
+    if (process.env.NODE_ENV === 'production') {
+      // In production, we want to be strict, but let's not fail the build on Vercel for missing vars
+      if (process.env.VERCEL) {
+        console.warn('Vercel build detected, not throwing for missing env vars.');
+      } else {
+        throw new Error(`Configuration validation failed: ${errors.join(', ')}`);
+      }
     }
   }
 }

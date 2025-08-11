@@ -1,7 +1,12 @@
-// client-only firebase app init
-import { initializeApp, getApps, getApp } from 'firebase/app';
+// src/lib/firebase-config.ts
+// Client-side Firebase config & Auth instance
 
-const cfg = {
+'use client';
+
+import { initializeApp, getApps, getApp } from 'firebase/app';
+import { getAuth } from 'firebase/auth';
+
+const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
@@ -11,5 +16,8 @@ const cfg = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
-// Don’t validate/throw here. Let runtime code fail gracefully if needed.
-export const firebaseApp = getApps().length ? getApp() : initializeApp(cfg);
+// Do not throw on missing envs here; keep this client-only and let calling code handle UX.
+export const firebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
+
+// Export the browser Auth instance for use in client components (e.g., AuthProvider)
+export const auth = getAuth(firebaseApp);

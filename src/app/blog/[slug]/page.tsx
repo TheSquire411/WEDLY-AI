@@ -1,101 +1,37 @@
-import { notFound } from 'next/navigation';
-import { getBlogPost, getBlogPosts } from '../utils';
-import { Header } from '@/components/header';
-import Image from 'next/image';
-import { Metadata, ResolvingMetadata } from 'next';
+// src/app/blog/page.tsx
 
-type Props = {
-  params: { slug: string };
-};
+import Link from 'next/link';
 
-export async function generateMetadata(
-  { params }: Props,
-  parent: ResolvingMetadata
-): Promise<Metadata> {
-  const post = getBlogPost(params.slug);
- 
-  if (!post) {
-    return {
-        title: 'Post Not Found',
-    }
-  }
- 
-  return {
-    title: post.metadata.title,
-    description: post.metadata.excerpt,
-    openGraph: {
-      title: post.metadata.title,
-      description: post.metadata.excerpt,
-      images: [
-        {
-          url: post.metadata.image,
-          width: 600,
-          height: 400,
-          alt: post.metadata.image_alt,
-        },
-      ],
-    },
-  }
+// This function would fetch a list of all your blog posts
+async function getAllPosts() {
+  // Replace this with your actual data fetching logic
+  // For example, fetch(`https://your-cms.com/api/posts`)
+  return [
+    { slug: 'first-post', title: 'My First Blog Post', excerpt: 'This is a short summary of the first post.' },
+    { slug: 'second-post', title: 'Another Interesting Article', excerpt: 'A brief look into another topic.' },
+    { slug: 'third-post', title: 'The Final Word', excerpt: 'Concluding thoughts on the series.' },
+  ];
 }
 
-export async function generateStaticParams() {
-    const posts = getBlogPosts();
-    return posts.map((post) => ({
-        slug: post.slug,
-    }));
-}
-
-
-// This is a simple markdown-to-html renderer
-function Markdown({ content }: { content: string }) {
-    const htmlContent = content
-        .split('\n\n')
-        .map(paragraph => {
-            if (paragraph.startsWith('## ')) {
-                return `<h2 class="text-3xl font-headline mt-8 mb-4">${paragraph.substring(3)}</h2>`;
-            } else if (paragraph.startsWith('### ')) {
-                return `<h3 class="text-2xl font-headline mt-6 mb-3">${paragraph.substring(4)}</h3>`;
-            } else if (paragraph.trim()) {
-                return `<p class="mb-4 leading-relaxed">${paragraph}</p>`;
-            }
-            return '';
-        })
-        .join('');
-    
-    return <div dangerouslySetInnerHTML={{ __html: htmlContent }} />;
-}
-
-export default function BlogPostPage({ params }: Props) {
-  const post = getBlogPost(params.slug);
-
-  if (!post) {
-    notFound();
-  }
+export default async function BlogIndexPage() {
+  const posts = await getAllPosts();
 
   return (
-    <div className="bg-background">
-      <Header />
-      <main className="container mx-auto px-4 py-12 sm:px-6 lg:px-8">
-        <article className="max-w-3xl mx-auto">
-          <header className="mb-8">
-            <h1 className="text-5xl font-headline text-center text-gray-800">{post.metadata.title}</h1>
-            <p className="text-center text-muted-foreground mt-4">{new Date(post.metadata.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-          </header>
-
-          <Image
-            src={post.metadata.image}
-            alt={post.metadata.image_alt}
-            data-ai-hint={post.metadata.image_hint}
-            width={1200}
-            height={600}
-            className="w-full h-auto rounded-lg shadow-lg object-cover mb-8"
-          />
-
-          <div className="prose lg:prose-xl max-w-none">
-              <Markdown content={post.content} />
-          </div>
-        </article>
-      </main>
+    <div className="container mx-auto px-4 py-12">
+      <header className="mb-12 text-center">
+        <h1 className="text-5xl font-bold tracking-tight">The Wedly Blog</h1>
+        <p className="mt-4 text-lg text-gray-600">Tips, tricks, and inspiration for your perfect day.</p>
+      </header>
+      
+      <div className="grid gap-8">
+        {posts.map((post) => (
+          <Link href={`/blog/${post.slug}`} key={post.slug} className="block p-6 rounded-lg border hover:shadow-lg transition-shadow">
+            <h2 className="text-2xl font-bold">{post.title}</h2>
+            <p className="mt-2 text-gray-700">{post.excerpt}</p>
+            <span className="mt-4 inline-block font-semibold text-primary">Read More &rarr;</span>
+          </Link>
+        ))}
+      </div>
     </div>
   );
 }

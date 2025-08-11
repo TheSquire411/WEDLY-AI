@@ -1,22 +1,40 @@
 import * as admin from 'firebase-admin';
 
-const serviceAccountJson = process.env.FIREBASE_ADMIN_SERVICE_ACCOUNT_JSON;
+let app: admin.app.App | null = null;
 
-if (!admin.apps.length) {
-  if (!serviceAccountJson) {
-    throw new Error('FIREBASE_ADMIN_SERVICE_ACCOUNT_JSON environment variable is not set. Firebase Admin SDK could not be initialized.');
+export function getAdminApp() {
+  if (app) return app;
+
+  const fromJson = process.env.FIREBASE_ADMIN_SERVICE_ACCOUNT_JSON
+    ? (() => {
+        try {
+          const j = JSON.parse(process.env.FIREBASE_ADMIN_SERVICE_ACCOUNT_JSON!);
+          return {
+            projectId: j.project_id,
+            clientEmail: j.client_email,
+            privateKey: j.private_key?.replace(/\\n/g, '\n'),
+          };
+        } catch {
+          return null;
+        }
+      })()
+    : null;
+
+  const projectId = fromJson?.projectId ?? process.env.FIREBASE_PROJECT_ID;
+  const clientEmail = fromJson?.clientEmail ?? process.env.FIREBASE_CLIENT_EMAIL;
+  const privateKey =
+    fromJson?.privateKey ?? process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+
+  if (!projectId || !clientEmail || !privateKey) {
+    // IMPORTANT: don’t throw at import/build time
+    return null;
   }
 
-  try {
-    const serviceAccount = JSON.parse(serviceAccountJson);
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
-    });
-  } catch (error) {
-    console.error("Firebase admin initialization error from service account JSON:", error);
-    throw new Error('Failed to initialize Firebase Admin SDK. Please check the service account credentials.');
-  }
+  app = admin.apps.length
+    ? admin.app()
+    : admin.initializeApp({
+        credential: admin.credential.cert({ projectId, clientEmail, privateKey }),
+      });
+
+  return app;
 }
-
-export const auth = admin.auth();
-export const db = admin.firestore();

@@ -11,7 +11,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { db } from '@/lib/firebase-admin';
+import { db } from '@/lib/firebase-admin-server';
 import { Timestamp } from 'firebase-admin/firestore';
 
 // Tool to get budget status
@@ -29,7 +29,7 @@ const getBudgetStatus = ai.defineTool(
     }),
   },
   async ({ userId }) => {
-    const budgetDocRef = db.collection('users').doc(userId).collection('budget').doc('summary');
+    const budgetDocRef = db().collection('users').doc(userId).collection('budget').doc('summary');
     
     const budgetDoc = await budgetDocRef.get();
 
@@ -58,7 +58,7 @@ const getGuestListSummary = ai.defineTool(
         })
     },
     async ({ userId }) => {
-        const guestsCollectionRef = db.collection('users').doc(userId).collection('guests');
+        const guestsCollectionRef = db().collection('users').doc(userId).collection('guests');
         const confirmedSnapshot = await guestsCollectionRef.where('rsvp', '==', 'Confirmed').get();
         const pendingSnapshot = await guestsCollectionRef.where('rsvp', '==', 'Pending').get();
         const declinedSnapshot = await guestsCollectionRef.where('rsvp', '==', 'Declined').get();
@@ -87,9 +87,9 @@ const getUpcomingTasks = ai.defineTool(
         }),
     },
     async ({ userId }) => {
-        const tasksCollectionRef = db.collection('users').doc(userId).collection('tasks');
+        const tasksCollectionRef = db().collection('users').doc(userId).collection('tasks');
         const tasksSnapshot = await tasksCollectionRef.where('completed', '==', false).get();
-        const upcomingTasks = tasksSnapshot.docs.map(doc => ({title: doc.data().title}));
+        const upcomingTasks = tasksSnapshot.docs.map((doc: any) => ({title: doc.data().title}));
         return { upcomingTasks };
     }
 )

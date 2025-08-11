@@ -2,16 +2,19 @@
 "use client";
 
 import { loadStripe, Stripe } from '@stripe/stripe-js';
+import { public as publicConfig } from '@/lib/config';
 
 // This is a singleton to ensure we only load Stripe once.
 let stripePromise: Promise<Stripe | null>;
 
 const getStripe = () => {
   if (!stripePromise) {
-    const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+    const publishableKey = publicConfig.stripe.publishableKey;
+    
     if (!publishableKey) {
-        throw new Error("Stripe publishable key is not set in .env.local");
+      throw new Error("Stripe publishable key is not configured. Please check your environment variables.");
     }
+    
     stripePromise = loadStripe(publishableKey);
   }
   return stripePromise;

@@ -5,10 +5,11 @@ import Image from 'next/image';
 import { Metadata, ResolvingMetadata } from 'next';
 
 export async function generateMetadata(
-  { params }: { params: { slug: string } },
+  { params }: { params: Promise<{ slug: string }> },
   parent: ResolvingMetadata
 ): Promise<Metadata> {
-  const post = getBlogPost(params.slug);
+  const { slug } = await params;
+  const post = getBlogPost(slug);
  
   if (!post) {
     return {
@@ -41,7 +42,6 @@ export async function generateStaticParams() {
     }));
 }
 
-
 // This is a simple markdown-to-html renderer
 function Markdown({ content }: { content: string }) {
     const htmlContent = content
@@ -61,13 +61,14 @@ function Markdown({ content }: { content: string }) {
     return <div dangerouslySetInnerHTML={{ __html: htmlContent }} />;
 }
 
-export default function BlogPostPage({ params }: { params: { slug: string } }) {
-  const post = getBlogPost(params.slug);
-
+export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const post = getBlogPost(slug);
+  
   if (!post) {
     notFound();
   }
-
+  
   return (
     <div className="bg-background">
       <Header />
@@ -77,7 +78,6 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
             <h1 className="text-5xl font-headline text-center text-gray-800">{post.metadata.title}</h1>
             <p className="text-center text-muted-foreground mt-4">{new Date(post.metadata.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
           </header>
-
           <Image
             src={post.metadata.image}
             alt={post.metadata.image_alt}
@@ -86,7 +86,6 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
             height={600}
             className="w-full h-auto rounded-lg shadow-lg object-cover mb-8"
           />
-
           <div className="prose lg:prose-xl max-w-none">
               <Markdown content={post.content} />
           </div>

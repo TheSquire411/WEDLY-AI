@@ -4,12 +4,8 @@ import { Header } from '@/components/header';
 import Image from 'next/image';
 import { Metadata, ResolvingMetadata } from 'next';
 
-type Props = {
-  params: { slug: string };
-};
-
 export async function generateMetadata(
-  { params }: Props,
+  { params }: { params: { slug: string } },
   parent: ResolvingMetadata
 ): Promise<Metadata> {
   const post = getBlogPost(params.slug);
@@ -65,7 +61,7 @@ function Markdown({ content }: { content: string }) {
     return <div dangerouslySetInnerHTML={{ __html: htmlContent }} />;
 }
 
-export default function BlogPostPage({ params }: Props) {
+export default function BlogPostPage({ params }: { params: { slug: string } }) {
   const post = getBlogPost(params.slug);
 
   if (!post) {

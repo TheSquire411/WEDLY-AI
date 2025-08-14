@@ -1,0 +1,27 @@
+/* components/VimeoEmbed.module.css */
+
+/* This container uses the "padding-top" trick to maintain a 16:9 aspect ratio.
+  The height of the container is 56.25% of its width (9 / 16 = 0.5625).
+  It's set to be relative so the iframe can be positioned absolutely inside it.
+*/
+.videoResponsive {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  padding-top: 56.25%; /* 16:9 Aspect Ratio */
+}
+
+/*
+  The iframe is positioned absolutely to fill the container created by the padding.
+  This makes it expand and contract with the container, maintaining its aspect ratio.
+*/
+.iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  width: 100%;
+  height: 100%;
+  border: none; /* Removes the default border from iframes */
+}

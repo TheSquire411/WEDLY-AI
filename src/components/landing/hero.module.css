@@ -1,0 +1,27 @@
+/* hero.module.css */
+
+.backgroundVideo {
+  /* Ensure the iframe is centered */
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+
+  /*
+    Set the minimum width and height to cover the screen.
+    This logic forces the video to cover the viewport, cropping
+    the excess instead of showing black bars.
+  */
+  min-width: 100%;
+  min-height: 100%;
+
+  /*
+    This is the key for responsive aspect ratios.
+    It makes the video's width at least 177.77% of the viewport's height,
+    and its height at least 56.25% of the viewport's width.
+    This ensures that on any screen (wide or tall), the video
+    will always be large enough to cover it completely.
+  */
+  width: 177.77vh; /* 100 * (16/9) */
+  height: 56.25vw; /* 100 * (9/16) */
+}

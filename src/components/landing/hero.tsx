@@ -1,8 +1,12 @@
+// hero.tsx
+
 "use client";
 
 import Link from 'next/link';
-import Script from 'next/script'; // Import the Next.js Script component
+import Script from 'next/script';
 import { Button } from '@/components/ui/button';
+// 1. Import your new CSS module file
+import styles from './hero.module.css';
 
 export function Hero() {
   return (
@@ -17,8 +21,9 @@ export function Hero() {
         <iframe
           src="https://player.vimeo.com/video/1108822056?background=1&autopause=0&loop=1&autoplay=1&muted=1"
           frameBorder="0"
-          allow="autoplay; fullscreen; picture-in-picture"
-          className="absolute top-1/2 left-1/2 w-full h-full min-w-full min-h-full object-cover transform -translate-x-1/2 -translate-y-1/2"
+          allow="autoplay; fullscreen"
+          // 2. Replace the old classes with your new, single class
+          className={styles.backgroundVideo}
           title="Wedly AI Background Video"
         ></iframe>
       </div>

@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from 'react';
@@ -11,64 +10,36 @@ import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautif
 import { unsplashImageSearch, type UnsplashImage } from '@/ai/flows/unsplash-image-search';
 import { UnsplashSearchDialog } from './unsplash-search-dialog';
 import { useToast } from '@/hooks/use-toast';
-
-interface VisionImage {
-    id: string;
-    src: string;
-    alt: string;
-    hint: string;
-}
+import { useVisionBoard } from '@/hooks/use-vision-board';
 
 export function VisionBoard() {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
-  const [images, setImages] = useState<VisionImage[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<UnsplashImage[]>([]);
   const [isSearchDialogOpen, setIsSearchDialogOpen] = useState(false);
   const { toast } = useToast();
 
+  const { images, addImage, addUnsplashImage, reorderImages, loading } = useVisionBoard();
+
   const handleUploadClick = () => {
     fileInputRef.current?.click();
   };
   
-  const addImage = (src: string, prompt: string) => {
-    const newImage: VisionImage = {
-        id: `image-${Date.now()}`,
-        src,
-        alt: prompt,
-        hint: prompt.split(' ').slice(0, 2).join(' '),
-    };
-    setImages(prev => [newImage, ...prev]);
-  }
-  
-  const addUnsplashImage = (image: UnsplashImage) => {
-    const newImage: VisionImage = {
-        id: image.id,
-        src: image.urls.regular,
-        alt: image.alt_description || "Unsplash image",
-        hint: image.alt_description?.split(' ').slice(0, 2).join(' ') || "wedding",
-    };
-    setImages(prev => [newImage, ...prev]);
-    setIsSearchDialogOpen(false);
-  }
-
   const onDragEnd = (result: DropResult) => {
     const { source, destination } = result;
-    if (!destination) return;
-
-    // Draggable IDs are "generator" and "image-..."
-    // Draggable indices are 0 for generator, 1+ for images
-    // `react-beautiful-dnd` indices are 0-based for the list.
-    // So the generator is at index 0, and images are at indices 1 and up.
+    if (!destination || source.index === destination.index) return;
     
-    const reorderedImages = Array.from(images);
     // The `source.index` from dnd accounts for the generator at index 0
     // but our `images` array does not. So we adjust by 1.
-    const [movedImage] = reorderedImages.splice(source.index - 1, 1);
-    reorderedImages.splice(destination.index - 1, 0, movedImage);
+    const sourceIndex = source.index - 1;
+    const destinationIndex = destination.index - 1;
+
+    const reordered = Array.from(images);
+    const [movedItem] = reordered.splice(sourceIndex, 1);
+    reordered.splice(destinationIndex, 0, movedItem);
     
-    setImages(reorderedImages);
+    reorderImages(reordered);
   }
   
   const handleSearch = async (e: React.FormEvent) => {
@@ -138,7 +109,7 @@ export function VisionBoard() {
                                 </div>
                             )}
                         </Draggable>
-                        {images.map((image, index) => (
+                        {!loading && images.map((image, index) => (
                              <Draggable key={image.id} draggableId={image.id} index={index + 1}>
                                 {(provided) => (
                                      <div
@@ -153,6 +124,11 @@ export function VisionBoard() {
                             </Draggable>
                         ))}
                         {provided.placeholder}
+                         {loading && (
+                            <div className="flex items-center justify-center col-span-full">
+                                <p>Loading images...</p>
+                            </div>
+                        )}
                     </div>
                 )}
             </Droppable>
@@ -163,7 +139,10 @@ export function VisionBoard() {
             onOpenChange={setIsSearchDialogOpen}
             isLoading={isSearching}
             images={searchResults}
-            onImageSelect={addUnsplashImage}
+            onImageSelect={(image) => {
+                addUnsplashImage(image);
+                setIsSearchDialogOpen(false);
+            }}
             query={searchQuery}
         />
     </div>

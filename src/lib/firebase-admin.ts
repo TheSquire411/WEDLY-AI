@@ -1,8 +1,12 @@
 import * as admin from 'firebase-admin';
 
-const serviceAccountJson = process.env.FIREBASE_ADMIN_SERVICE_ACCOUNT_JSON;
+const ensureFirebaseAdminIsInitialized = () => {
+  if (admin.apps.length > 0) {
+    return;
+  }
 
-if (!admin.apps.length) {
+  const serviceAccountJson = process.env.FIREBASE_ADMIN_SERVICE_ACCOUNT_JSON;
+
   if (!serviceAccountJson) {
     throw new Error('FIREBASE_ADMIN_SERVICE_ACCOUNT_JSON environment variable is not set. Firebase Admin SDK could not be initialized.');
   }
@@ -16,7 +20,14 @@ if (!admin.apps.length) {
     console.error("Firebase admin initialization error from service account JSON:", error);
     throw new Error('Failed to initialize Firebase Admin SDK. Please check the service account credentials.');
   }
-}
+};
 
-export const auth = admin.auth();
-export const db = admin.firestore();
+export const getAuth = () => {
+  ensureFirebaseAdminIsInitialized();
+  return admin.auth();
+};
+
+export const getDb = () => {
+  ensureFirebaseAdminIsInitialized();
+  return admin.firestore();
+};

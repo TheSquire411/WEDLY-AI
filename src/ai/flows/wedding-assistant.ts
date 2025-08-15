@@ -11,7 +11,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { db } from '@/lib/firebase-admin';
+import { getDb } from '@/lib/firebase-admin';
 import { Timestamp } from 'firebase-admin/firestore';
 
 // Tool to get budget status
@@ -29,6 +29,7 @@ const getBudgetStatus = ai.defineTool(
     }),
   },
   async ({ userId }) => {
+    const db = getDb();
     const budgetDocRef = db.collection('users').doc(userId).collection('budget').doc('summary');
     
     const budgetDoc = await budgetDocRef.get();
@@ -58,6 +59,7 @@ const getGuestListSummary = ai.defineTool(
         })
     },
     async ({ userId }) => {
+        const db = getDb();
         const guestsCollectionRef = db.collection('users').doc(userId).collection('guests');
         const confirmedSnapshot = await guestsCollectionRef.where('rsvp', '==', 'Confirmed').get();
         const pendingSnapshot = await guestsCollectionRef.where('rsvp', '==', 'Pending').get();
@@ -87,6 +89,7 @@ const getUpcomingTasks = ai.defineTool(
         }),
     },
     async ({ userId }) => {
+        const db = getDb();
         const tasksCollectionRef = db.collection('users').doc(userId).collection('tasks');
         const tasksSnapshot = await tasksCollectionRef.where('completed', '==', false).get();
         const upcomingTasks = tasksSnapshot.docs.map(doc => ({title: doc.data().title}));

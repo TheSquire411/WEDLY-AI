@@ -1,7 +1,7 @@
 
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { auth } from '@/lib/firebase-admin'; // Using admin SDK for server-side verification
+import { getAuth } from '@/lib/firebase-admin'; // Using admin SDK for server-side verification
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
@@ -12,6 +12,7 @@ export async function POST(request: Request) {
         return new NextResponse('Unauthorized', { status: 401 });
     }
     const idToken = authorization.split('Bearer ')[1];
+    const auth = getAuth();
     const decodedToken = await auth.verifyIdToken(idToken);
     const userId = decodedToken.uid;
 

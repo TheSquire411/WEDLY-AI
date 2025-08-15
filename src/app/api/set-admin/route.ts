@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/lib/firebase-admin';
+import { getAuth } from '@/lib/firebase-admin';
 
 export async function POST(request: Request) {
   try {
@@ -8,6 +8,7 @@ export async function POST(request: Request) {
         return new NextResponse('Unauthorized', { status: 401 });
     }
     const idToken = authorization.split('Bearer ')[1];
+    const auth = getAuth();
     const decodedToken = await auth.verifyIdToken(idToken);
     const userId = decodedToken.uid;
 

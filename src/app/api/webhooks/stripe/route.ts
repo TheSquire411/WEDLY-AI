@@ -1,7 +1,7 @@
 
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { db } from '@/lib/firebase-admin'; // Using admin SDK for server-side database operations
+import { getDb } from '@/lib/firebase-admin'; // Using admin SDK for server-side database operations
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
@@ -31,6 +31,7 @@ export async function POST(request: Request) {
       }
       
       // Update the user's record in Firestore to mark them as 'premium'
+      const db = getDb();
       const userDocRef = db.collection('users').doc(userId);
       await userDocRef.update({ premium: true });
 

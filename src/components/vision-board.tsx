@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react'; // Import useEffect
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,7 +20,6 @@ interface VisionImage {
 
 export function VisionBoard() {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
-  // We provide a function to useState to lazily initialize the state from localStorage
   const [images, setImages] = useState<VisionImage[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
@@ -28,27 +27,23 @@ export function VisionBoard() {
   const [isSearchDialogOpen, setIsSearchDialogOpen] = useState(false);
   const { toast } = useToast();
 
-  // --- START: NEW CODE TO HANDLE PERSISTENCE ---
-
-  // EFFECT 1: Load images from localStorage when the component first mounts.
   useEffect(() => {
-    // Check if window is defined to ensure this code only runs on the client-side
     if (typeof window !== 'undefined') {
       const savedImages = localStorage.getItem('visionBoardImages');
       if (savedImages) {
+        console.log("Loading images from localStorage."); // ADDED THIS LOG
         setImages(JSON.parse(savedImages));
       }
     }
-  }, []); // The empty array [] means this effect runs only once on mount
+  }, []);
 
-  // EFFECT 2: Save images to localStorage every time the 'images' state changes.
   useEffect(() => {
+    // This is the important one to check!
+    console.log("Saving images to localStorage:", images); // ADDED THIS LOG
     if (typeof window !== 'undefined') {
       localStorage.setItem('visionBoardImages', JSON.stringify(images));
     }
-  }, [images]); // This effect runs whenever the 'images' array is updated
-
-  // --- END: NEW CODE TO HANDLE PERSISTENCE ---
+  }, [images]);
 
   const handleUploadClick = () => {
     fileInputRef.current?.click();
@@ -61,6 +56,7 @@ export function VisionBoard() {
         alt: prompt,
         hint: prompt.split(' ').slice(0, 2).join(' '),
     };
+    console.log("Adding new generated image:", newImage); // ADDED THIS LOG
     setImages(prev => [newImage, ...prev]);
   }
   
@@ -71,6 +67,7 @@ export function VisionBoard() {
         alt: image.alt_description || "Unsplash image",
         hint: image.alt_description?.split(' ').slice(0, 2).join(' ') || "wedding",
     };
+    console.log("Adding new Unsplash image:", newImage); // ADDED THIS LOG
     setImages(prev => [newImage, ...prev]);
     setIsSearchDialogOpen(false);
   }
@@ -78,15 +75,8 @@ export function VisionBoard() {
   const onDragEnd = (result: DropResult) => {
     const { source, destination } = result;
     if (!destination) return;
-
-    // Draggable IDs are "generator" and "image-..."
-    // Draggable indices are 0 for generator, 1+ for images
-    // `react-beautiful-dnd` indices are 0-based for the list.
-    // So the generator is at index 0, and images are at indices 1 and up.
     
     const reorderedImages = Array.from(images);
-    // The `source.index` from dnd accounts for the generator at index 0
-    // but our `images` array does not. So we adjust by 1.
     const [movedImage] = reorderedImages.splice(source.index - 1, 1);
     reorderedImages.splice(destination.index - 1, 0, movedImage);
     
@@ -115,6 +105,7 @@ export function VisionBoard() {
       }
   }
 
+  // ... rest of your component's return statement (no changes needed there)
   return (
     <div>
         <div className="flex flex-col sm:flex-row gap-4 justify-between items-start mb-8">
@@ -177,7 +168,7 @@ export function VisionBoard() {
                         {provided.placeholder}
                     </div>
                 )}
-            </Droppable>
+            </a-droppable>
         </DragDropContext>
         
         <UnsplashSearchDialog 

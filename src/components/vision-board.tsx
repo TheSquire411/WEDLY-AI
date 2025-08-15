@@ -109,7 +109,8 @@ export function VisionBoard() {
         <div className="flex flex-col sm:flex-row gap-4 justify-between items-start mb-8">
             <div>
                 <h2 className="text-4xl font-headline text-gray-800">Vision Board</h2>
-                <p className="text-muted-foreground">Your wedding inspiration in one place. Drag to rearrange.</p>
+                <p className="text-muted-foreground">Your wedding inspiration in one place. Drag to rearrange. [Updated: {new Date().toISOString()}]
+                </p>
             </div>
              <div className="flex gap-2">
                 <Input type="file" ref={fileInputRef} className="hidden" />

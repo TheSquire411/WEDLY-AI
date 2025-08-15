@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -66,7 +65,8 @@ export function VisionBoardGenerator({ onImageGenerated }: VisionBoardGeneratorP
                 </div>
             ) : lastGeneratedImage ? (
                  <div className="relative w-full h-full">
-                    <Image src={lastGeneratedImage} alt="Last generated image" layout="fill" className="object-cover rounded-md" />
+                    {/* CORRECTED THIS LINE: "layout='fill'" is outdated */}
+                    <Image src={lastGeneratedImage} alt="Last generated image" fill sizes="25vw" className="object-cover rounded-md" />
                  </div>
             ) : (
                 <div className="text-center text-muted-foreground">

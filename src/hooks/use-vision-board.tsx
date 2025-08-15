@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { db } from '@/lib/firebase';
 import { collection, addDoc, onSnapshot, query, where, orderBy, doc, setDoc } from 'firebase/firestore';
 import { useAuth } from '@/context/auth-context';
@@ -10,10 +10,20 @@ export interface VisionImage {
     alt: string;
     hint: string;
     order: number;
-    userId?: string; // To associate image with a user
+    userId?: string;
 }
 
-export function useVisionBoard() {
+interface VisionBoardContextType {
+  images: VisionImage[];
+  loading: boolean;
+  addImage: (src: string, prompt: string) => Promise<void>;
+  addUnsplashImage: (image: UnsplashImage) => Promise<void>;
+  reorderImages: (reorderedImages: VisionImage[]) => Promise<void>;
+}
+
+const VisionBoardContext = createContext<VisionBoardContextType | undefined>(undefined);
+
+export const VisionBoardProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
   const [images, setImages] = useState<VisionImage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -82,6 +92,7 @@ export function useVisionBoard() {
   const reorderImages = async (reorderedImages: VisionImage[]) => {
     if (!user) return;
 
+    // Optimistically update the local state
     setImages(reorderedImages);
 
     const promises = reorderedImages.map((image, index) => {
@@ -93,9 +104,24 @@ export function useVisionBoard() {
         await Promise.all(promises);
     } catch (error) {
         console.error("Error reordering images:", error);
-        // Optionally, revert local state on failure
+        // If the update fails, you might want to revert the state
+        // to the one from Firestore, but that's a more complex UI pattern.
     }
   };
 
-  return { images, loading, addImage, addUnsplashImage, reorderImages };
-}
+  const value = { images, loading, addImage, addUnsplashImage, reorderImages };
+
+  return (
+    <VisionBoardContext.Provider value={value}>
+      {children}
+    </VisionBoardContext.Provider>
+  );
+};
+
+export const useVisionBoard = () => {
+  const context = useContext(VisionBoardContext);
+  if (context === undefined) {
+    throw new Error('useVisionBoard must be used within a VisionBoardProvider');
+  }
+  return context;
+};

@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { SubscriptionProvider } from '@/hooks/use-subscription';
 import { UserProvider } from '@/hooks/use-user';
 import { PhotoProvider } from '@/hooks/use-photos';
+import { VisionBoardProvider } from '@/hooks/use-vision-board';
 import Link from 'next/link';
 import { GuestProvider } from '@/hooks/use-guests';
 import { TaskProvider } from '@/hooks/use-tasks';
@@ -36,15 +37,17 @@ export default function RootLayout({
         <UserProvider>
           <SubscriptionProvider>
             <PhotoProvider>
-              <GuestProvider>
-                <TaskProvider>
-                  <div className="flex-grow">
-                    {children}
-                  </div>
-                  <Toaster />
-                  <Footer />
-                </TaskProvider>
-              </GuestProvider>
+              <VisionBoardProvider>
+                <GuestProvider>
+                  <TaskProvider>
+                    <div className="flex-grow">
+                      {children}
+                    </div>
+                    <Toaster />
+                    <Footer />
+                  </TaskProvider>
+                </GuestProvider>
+              </VisionBoardProvider>
             </PhotoProvider>
           </SubscriptionProvider>
         </UserProvider>

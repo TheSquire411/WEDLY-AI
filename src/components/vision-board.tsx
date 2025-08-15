@@ -120,7 +120,7 @@ export function VisionBoard() {
       console.log('🔄 Images changed, triggering save. Images count:', images.length);
       saveImages(images);
     }
-  }, [images, mounted, saveImages]);es, mounted, saveImages]);
+  }, [images, mounted, saveImages]);
 
   const handleUploadClick = () => {
     fileInputRef.current?.click();

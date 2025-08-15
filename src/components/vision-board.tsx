@@ -11,6 +11,8 @@ import { unsplashImageSearch, type UnsplashImage } from '@/ai/flows/unsplash-ima
 import { UnsplashSearchDialog } from './unsplash-search-dialog';
 import { useToast } from '@/hooks/use-toast';
 
+console.log("🎨 VISION BOARD COMPONENT IS LOADING!", new Date().toISOString());
+
 interface VisionImage {
     id: string;
     src: string;

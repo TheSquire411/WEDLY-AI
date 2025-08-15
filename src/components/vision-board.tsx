@@ -95,4 +95,88 @@ export function VisionBoard() {
       } catch (error) {
           console.error("Unsplash search error:", error);
           toast({
-            title: "Search
+            title: "Search Failed",
+            description: "Could not fetch images from Unsplash. Please try again later.",
+            variant: "destructive",
+          });
+      } finally {
+          setIsSearching(false);
+      }
+  }
+
+  return (
+    <div>
+        <div className="flex flex-col sm:flex-row gap-4 justify-between items-start mb-8">
+            <div>
+                <h2 className="text-4xl font-headline text-gray-800">Vision Board</h2>
+                <p className="text-muted-foreground">Your wedding inspiration in one place. Drag to rearrange.</p>
+            </div>
+             <div className="flex gap-2">
+                <Input type="file" ref={fileInputRef} className="hidden" />
+                <Button variant="outline" onClick={handleUploadClick}>
+                    <Upload className="mr-2" />
+                    Upload Image
+                </Button>
+                <form onSubmit={handleSearch} className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    <Input 
+                        placeholder="Search Unsplash..." 
+                        className="pl-10" 
+                        value={searchQuery}
+                        onChange={e => setSearchQuery(e.target.value)}
+                        disabled={isSearching}
+                    />
+                </form>
+            </div>
+        </div>
+        
+        <DragDropContext onDragEnd={onDragEnd}>
+            <Droppable droppableId="vision-board-grid" direction="horizontal">
+                {(provided) => (
+                    <div 
+                        ref={provided.innerRef}
+                        {...provided.droppableProps}
+                        className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+                    >
+                        <Draggable key="generator" draggableId="generator" index={0} isDragDisabled={true}>
+                            {(provided) => (
+                                <div
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    {...provided.dragHandleProps}
+                                >
+                                    <VisionBoardGenerator onImageGenerated={addImage} />
+                                </div>
+                            )}
+                        </Draggable>
+                        {images.map((image, index) => (
+                             <Draggable key={image.id} draggableId={image.id} index={index + 1}>
+                                {(provided) => (
+                                     <div
+                                         ref={provided.innerRef}
+                                         {...provided.draggableProps}
+                                         {...provided.dragHandleProps}
+                                         className="overflow-hidden rounded-lg shadow-md aspect-square"
+                                     >
+                                         <Image src={image.src} alt={image.alt} data-ai-hint={image.hint} width={400} height={400} className="object-cover w-full h-full hover:scale-105 transition-transform duration-300 ease-in-out" />
+                                     </div>
+                                )}
+                            </Draggable>
+                        ))}
+                        {provided.placeholder}
+                    </div>
+                )}
+            </Droppable>
+        </DragDropContext>
+        
+        <UnsplashSearchDialog 
+            isOpen={isSearchDialogOpen}
+            onOpenChange={setIsSearchDialogOpen}
+            isLoading={isSearching}
+            images={searchResults}
+            onImageSelect={addUnsplashImage}
+            query={searchQuery}
+        />
+    </div>
+  );
+}

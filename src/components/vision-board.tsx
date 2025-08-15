@@ -120,4 +120,201 @@ export function VisionBoard() {
       console.log('🔄 Images changed, triggering save. Images count:', images.length);
       saveImages(images);
     }
-  }, [imag
+  }, [images, mounted, saveImages]);es, mounted, saveImages]);
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+  
+  const addImage = useCallback((src: string, prompt: string) => {
+    const newImage: VisionImage = {
+        id: `gen-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        src,
+        alt: prompt,
+        hint: prompt.split(' ').slice(0, 2).join(' '),
+    };
+    console.log('➕ Adding new generated image:', newImage);
+    
+    setImages(prevImages => {
+        const newImages = [newImage, ...prevImages];
+        console.log('🔄 New images array will be:', newImages.length, 'items');
+        return newImages;
+    });
+  }, []);
+  
+  const addUnsplashImage = useCallback((image: UnsplashImage) => {
+    const newImage: VisionImage = {
+        id: `unsplash-${image.id}`,
+        src: image.urls.regular,
+        alt: image.alt_description || "Unsplash image",
+        hint: image.alt_description?.split(' ').slice(0, 2).join(' ') || "wedding",
+    };
+    console.log('➕ Adding new Unsplash image:', newImage);
+    
+    setImages(prevImages => {
+        const newImages = [newImage, ...prevImages];
+        console.log('🔄 New images array will be:', newImages.length, 'items');
+        return newImages;
+    });
+    setIsSearchDialogOpen(false);
+  }, []);
+
+  const removeImage = useCallback((imageId: string) => {
+    console.log('🗑️ Removing image:', imageId);
+    setImages(prevImages => {
+        const newImages = prevImages.filter(img => img.id !== imageId);
+        console.log('🔄 After removal, images array will be:', newImages.length, 'items');
+        return newImages;
+    });
+  }, []);
+
+  const onDragEnd = useCallback((result: DropResult) => {
+    const { source, destination } = result;
+    if (!destination) return;
+    
+    console.log('🔀 Reordering images...');
+    setImages(prevImages => {
+        const reorderedImages = Array.from(prevImages);
+        const [movedImage] = reorderedImages.splice(source.index - 1, 1);
+        reorderedImages.splice(destination.index - 1, 0, movedImage);
+        console.log('🔄 Reordered images array will be:', reorderedImages.length, 'items');
+        return reorderedImages;
+    });
+  }, []);
+  
+  const handleSearch = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!searchQuery.trim()) return;
+      
+      setIsSearching(true);
+      setSearchResults([]);
+      try {
+          const results = await unsplashImageSearch({ query: searchQuery });
+          setSearchResults(results.images);
+          setIsSearchDialogOpen(true);
+      } catch (error) {
+          console.error("Unsplash search error:", error);
+          toast({
+            title: "Search Failed",
+            description: "Could not fetch images from Unsplash. Please try again later.",
+            variant: "destructive",
+          });
+      } finally {
+          setIsSearching(false);
+      }
+  }
+
+  // Debug button to manually check localStorage
+  const debugLocalStorage = () => {
+    console.log('🔍 DEBUG: Manual localStorage check');
+    const data = loadFromLocalStorage();
+    console.log('🔍 DEBUG: Current localStorage data:', data);
+    console.log('🔍 DEBUG: Current state images:', images);
+    alert(`localStorage has ${data.length} images, state has ${images.length} images`);
+  };
+
+  console.log('🎨 VisionBoard render - mounted:', mounted, 'images count:', images.length);
+
+  return (
+    <div>
+        <div className="flex flex-col sm:flex-row gap-4 justify-between items-start mb-8">
+            <div>
+                <h2 className="text-4xl font-headline text-gray-800">Vision Board</h2>
+                <p className="text-muted-foreground">Your wedding inspiration in one place. Drag to rearrange.</p>
+                {/* Debug info */}
+                <div className="mt-2 text-xs text-gray-500">
+                    Mounted: {mounted ? '✅' : '❌'} | Images: {images.length} | 
+                    <button onClick={debugLocalStorage} className="ml-2 underline">Debug Storage</button>
+                </div>
+            </div>
+             <div className="flex gap-2">
+                <Input type="file" ref={fileInputRef} className="hidden" />
+                <Button variant="outline" onClick={handleUploadClick}>
+                    <Upload className="mr-2" />
+                    Upload Image
+                </Button>
+                <form onSubmit={handleSearch} className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    <Input 
+                        placeholder="Search Unsplash..." 
+                        className="pl-10" 
+                        value={searchQuery}
+                        onChange={e => setSearchQuery(e.target.value)}
+                        disabled={isSearching}
+                    />
+                </form>
+            </div>
+        </div>
+        
+        {mounted ? (
+            <DragDropContext onDragEnd={onDragEnd}>
+                <Droppable droppableId="vision-board-grid" direction="horizontal">
+                    {(provided) => (
+                        <div 
+                            ref={provided.innerRef}
+                            {...provided.droppableProps}
+                            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+                        >
+                            <Draggable key="generator" draggableId="generator" index={0} isDragDisabled={true}>
+                                {(provided) => (
+                                    <div
+                                        ref={provided.innerRef}
+                                        {...provided.draggableProps}
+                                        {...provided.dragHandleProps}
+                                    >
+                                        <VisionBoardGenerator onImageGenerated={addImage} />
+                                    </div>
+                                )}
+                            </Draggable>
+                            {images.map((image, index) => (
+                                 <Draggable key={image.id} draggableId={image.id} index={index + 1}>
+                                    {(provided) => (
+                                         <div
+                                             ref={provided.innerRef}
+                                             {...provided.draggableProps}
+                                             {...provided.dragHandleProps}
+                                             className="overflow-hidden rounded-lg shadow-md aspect-square relative group"
+                                         >
+                                             <Image 
+                                                src={image.src} 
+                                                alt={image.alt} 
+                                                data-ai-hint={image.hint} 
+                                                width={400} 
+                                                height={400} 
+                                                className="object-cover w-full h-full hover:scale-105 transition-transform duration-300 ease-in-out" 
+                                            />
+                                            <button
+                                                onClick={() => removeImage(image.id)}
+                                                className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                                                title="Remove image"
+                                            >
+                                                ×
+                                            </button>
+                                         </div>
+                                    )}
+                                </Draggable>
+                            ))}
+                            {provided.placeholder}
+                        </div>
+                    )}
+                </Droppable>
+            </DragDropContext>
+        ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <VisionBoardGenerator onImageGenerated={addImage} />
+                {/* Skeleton loading for saved images */}
+                <div className="animate-pulse bg-gray-200 aspect-square rounded-lg"></div>
+            </div>
+        )}
+        
+        <UnsplashSearchDialog 
+            isOpen={isSearchDialogOpen}
+            onOpenChange={setIsSearchDialogOpen}
+            isLoading={isSearching}
+            images={searchResults}
+            onImageSelect={addUnsplashImage}
+            query={searchQuery}
+        />
+    </div>
+  );
+}

@@ -23,28 +23,42 @@ interface VisionImage {
 export function VisionBoard() {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [images, setImages] = useState<VisionImage[]>([]);
+  const [hydrated, setHydrated] = useState(false); // 👈 hydration state
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<UnsplashImage[]>([]);
   const [isSearchDialogOpen, setIsSearchDialogOpen] = useState(false);
   const { toast } = useToast();
 
+  // Load from localStorage on first mount
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedImages = localStorage.getItem('visionBoardImages');
-      if (savedImages) {
-        console.log("Loading images from localStorage.");
-        setImages(JSON.parse(savedImages));
+    try {
+      if (typeof window !== 'undefined') {
+        const savedImages = localStorage.getItem('visionBoardImages');
+        if (savedImages) {
+          console.log("Loading images from localStorage.");
+          setImages(JSON.parse(savedImages));
+        }
       }
+    } catch (e) {
+      console.warn("Failed to parse saved images", e);
+    } finally {
+      setHydrated(true);
     }
   }, []);
 
+  // Save to localStorage only after initial hydration
   useEffect(() => {
-    console.log("Saving images to localStorage:", images);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('visionBoardImages', JSON.stringify(images));
+    if (!hydrated) return; // 👈 prevents overwriting with []
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('visionBoardImages', JSON.stringify(images));
+        console.log("Saving images to localStorage:", images);
+      }
+    } catch (e) {
+      console.warn("Failed to save images", e);
     }
-  }, [images]);
+  }, [images, hydrated]);
 
   const handleUploadClick = () => {
     fileInputRef.current?.click();

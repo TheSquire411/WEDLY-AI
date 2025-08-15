@@ -1,7 +1,6 @@
-
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react'; // Import useEffect
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,12 +20,35 @@ interface VisionImage {
 
 export function VisionBoard() {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  // We provide a function to useState to lazily initialize the state from localStorage
   const [images, setImages] = useState<VisionImage[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<UnsplashImage[]>([]);
   const [isSearchDialogOpen, setIsSearchDialogOpen] = useState(false);
   const { toast } = useToast();
+
+  // --- START: NEW CODE TO HANDLE PERSISTENCE ---
+
+  // EFFECT 1: Load images from localStorage when the component first mounts.
+  useEffect(() => {
+    // Check if window is defined to ensure this code only runs on the client-side
+    if (typeof window !== 'undefined') {
+      const savedImages = localStorage.getItem('visionBoardImages');
+      if (savedImages) {
+        setImages(JSON.parse(savedImages));
+      }
+    }
+  }, []); // The empty array [] means this effect runs only once on mount
+
+  // EFFECT 2: Save images to localStorage every time the 'images' state changes.
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('visionBoardImages', JSON.stringify(images));
+    }
+  }, [images]); // This effect runs whenever the 'images' array is updated
+
+  // --- END: NEW CODE TO HANDLE PERSISTENCE ---
 
   const handleUploadClick = () => {
     fileInputRef.current?.click();
@@ -120,7 +142,7 @@ export function VisionBoard() {
         </div>
         
         <DragDropContext onDragEnd={onDragEnd}>
-            <Droppable droppableId="vision-board-grid" direction="horizontal" isDropDisabled={false} isCombineEnabled={false} ignoreContainerClipping={false}>
+            <Droppable droppableId="vision-board-grid" direction="horizontal">
                 {(provided) => (
                     <div 
                         ref={provided.innerRef}
@@ -142,13 +164,13 @@ export function VisionBoard() {
                              <Draggable key={image.id} draggableId={image.id} index={index + 1}>
                                 {(provided) => (
                                      <div
-                                        ref={provided.innerRef}
-                                        {...provided.draggableProps}
-                                        {...provided.dragHandleProps}
-                                        className="overflow-hidden rounded-lg shadow-md aspect-square"
-                                    >
-                                        <Image src={image.src} alt={image.alt} data-ai-hint={image.hint} width={400} height={400} className="object-cover w-full h-full hover:scale-105 transition-transform duration-300 ease-in-out" />
-                                    </div>
+                                         ref={provided.innerRef}
+                                         {...provided.draggableProps}
+                                         {...provided.dragHandleProps}
+                                         className="overflow-hidden rounded-lg shadow-md aspect-square"
+                                     >
+                                         <Image src={image.src} alt={image.alt} data-ai-hint={image.hint} width={400} height={400} className="object-cover w-full h-full hover:scale-105 transition-transform duration-300 ease-in-out" />
+                                     </div>
                                 )}
                             </Draggable>
                         ))}

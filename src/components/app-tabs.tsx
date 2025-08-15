@@ -50,7 +50,7 @@ export function AppTabs() {
       <TabsContent value="dashboard" className="mt-6">
         <DashboardOverview />
       </TabsContent>
-       <TabsContent value="vision-board" className="mt-6">
+       <TabsContent value="vision-board" className="mt-6" forceMount>
         <VisionBoard />
       </TabsContent>
       <TabsContent value="photos" className="mt-6">

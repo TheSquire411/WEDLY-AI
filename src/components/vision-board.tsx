@@ -1,14 +1,16 @@
 "use client";
 
 export function VisionBoard() {
-  console.log("VISION BOARD COMPONENT IS LOADING!!!");
+  console.log("VISION BOARD LOADED FROM GITHUB!");
   
   return (
     <div>
-      <h1 style={{color: 'red', fontSize: '48px'}}>VISION BOARD TEST</h1>
-      <p>If you can see this red text, the component is loading!</p>
-      <button onClick={() => console.log('Button clicked!')}>
-        Click me for console test
+      <h1 style={{color: 'red', fontSize: '48px', background: 'yellow', padding: '20px'}}>
+        GITHUB TEST - TIMESTAMP: {new Date().toISOString()}
+      </h1>
+      <p>If you see this, the file updated successfully!</p>
+      <button onClick={() => alert('Button works!')}>
+        Click me!
       </button>
     </div>
   );

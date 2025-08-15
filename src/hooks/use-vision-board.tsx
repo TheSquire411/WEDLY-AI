@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { db } from '@/lib/firebase';
 import { collection, addDoc, onSnapshot, query, where, orderBy, doc, setDoc } from 'firebase/firestore';
-import { useAuth } from '@/context/auth-context';
+import { useUser } from '@/hooks/use-user';
 import { type UnsplashImage } from '@/ai/flows/unsplash-image-search';
 
 export interface VisionImage {
@@ -26,7 +26,7 @@ interface VisionBoardContextType {
 const VisionBoardContext = createContext<VisionBoardContextType | undefined>(undefined);
 
 export const VisionBoardProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user } = useAuth();
+  const { user } = useUser();
   const [images, setImages] = useState<VisionImage[]>([]);
   const [loading, setLoading] = useState(true);
 

@@ -220,6 +220,12 @@ export function createSecureResponse(
  * Handle preflight OPTIONS requests
  */
 export function handlePreflight(request: Request, endpointType: 'api' | 'webhook' = 'api'): NextResponse {
+  console.log('Handling preflight request for:', request.url);
+  const origin = request.headers.get('origin');
+  const corsConfig = getCorsConfig(endpointType);
+  console.log('CORS config:', corsConfig);
+  console.log('Request origin:', origin);
+
   const response = new NextResponse(null, { status: 200 });
   
   // Apply CORS headers for preflight
@@ -228,6 +234,7 @@ export function handlePreflight(request: Request, endpointType: 'api' | 'webhook
   // Apply security headers
   applySecurityHeaders(response);
   
+  console.log('Preflight response headers:', response.headers);
   return response;
 }
 

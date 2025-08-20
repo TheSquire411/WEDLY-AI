@@ -117,8 +117,11 @@ export function BudgetTracker() {
             setTotalBudget(data.total || 0);
             setTotalSpent(data.spent || 0);
         } else {
-            setTotalBudget(20000); // Default value
+            // Document doesn't exist, create it with default values
+            const defaultBudget = 20000;
+            setTotalBudget(defaultBudget);
             setTotalSpent(0);
+            setDoc(budgetDocRef, { total: defaultBudget, spent: 0 });
         }
     }, (error) => {
         console.error("Error fetching budget summary:", error);
@@ -214,21 +217,35 @@ export function BudgetTracker() {
   };
 
   async function handleAddExpense(values: z.infer<typeof expenseSchema>) {
-    if (!expensesCollectionRef) return;
-    await addDoc(expensesCollectionRef, {
-        ...values,
-        estimated: values.actual,
-        paid: false,
-        reminder: false,
-        dueDate: Timestamp.fromDate(values.dueDate),
-    });
+    if (!user || !budgetDocRef || !expensesCollectionRef) return;
 
-    toast({
-        title: "Expense Added",
-        description: `${values.category} for $${values.actual} has been added to your budget.`,
-    });
-    form.reset();
-    setIsAddExpenseOpen(false);
+    try {
+        await runTransaction(db, async (transaction) => {
+            const budgetSummaryDoc = await transaction.get(budgetDocRef);
+            if (!budgetSummaryDoc.exists()) {
+                transaction.set(budgetDocRef, { total: totalBudget, spent: 0 });
+            }
+
+            const newExpenseRef = doc(expensesCollectionRef);
+            transaction.set(newExpenseRef, {
+                ...values,
+                estimated: values.actual,
+                paid: false,
+                reminder: false,
+                dueDate: Timestamp.fromDate(values.dueDate),
+            });
+        });
+
+        toast({
+            title: "Expense Added",
+            description: `${values.category} for ${values.actual} has been added to your budget.`,
+        });
+        form.reset();
+        setIsAddExpenseOpen(false);
+    } catch (e) {
+        console.error("Failed to add expense: ", e);
+        toast({ variant: 'destructive', title: 'Error', description: 'Could not add expense.'});
+    }
   }
 
   const handleBudgetChange = async (newTotal: number) => {

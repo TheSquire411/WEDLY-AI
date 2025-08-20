@@ -20,7 +20,7 @@ const postsDirectory = path.join(process.cwd(), 'src/content/posts');
 export function getBlogPosts(): Post[] {
     const fileNames = fs.readdirSync(postsDirectory);
     const allPostsData = fileNames.map(fileName => {
-        const slug = fileName.replace(/\.md$/, '');
+        const slug = fileName.replace(/\.md$/, '').toLowerCase().replace(/ /g, '-');
         const fullPath = path.join(postsDirectory, fileName);
         const fileContents = fs.readFileSync(fullPath, 'utf8');
         const { data, content } = matter(fileContents);
@@ -42,7 +42,14 @@ export function getBlogPosts(): Post[] {
 }
 
 export function getBlogPost(slug: string): Post | undefined {
-    const fullPath = path.join(postsDirectory, `${slug}.md`);
+    const fileNames = fs.readdirSync(postsDirectory);
+    const fileName = fileNames.find(name => name.replace(/\.md$/, '').toLowerCase().replace(/ /g, '-') === slug);
+
+    if (!fileName) {
+        return undefined;
+    }
+
+    const fullPath = path.join(postsDirectory, fileName);
     try {
         const fileContents = fs.readFileSync(fullPath, 'utf8');
         const { data, content } = matter(fileContents);

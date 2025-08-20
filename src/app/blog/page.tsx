@@ -1,20 +1,8 @@
-// src/app/blog/page.tsx
-
 import Link from 'next/link';
-
-// This function would fetch a list of all your blog posts
-async function getAllPosts() {
-  // Replace this with your actual data fetching logic
-  // For example, fetch(`https://your-cms.com/api/posts`)
-  return [
-    { slug: 'first-post', title: 'My First Blog Post', excerpt: 'This is a short summary of the first post.' },
-    { slug: 'second-post', title: 'Another Interesting Article', excerpt: 'A brief look into another topic.' },
-    { slug: 'third-post', title: 'The Final Word', excerpt: 'Concluding thoughts on the series.' },
-  ];
-}
+import { getBlogPosts } from './utils';
 
 export default async function BlogIndexPage() {
-  const posts = await getAllPosts();
+  const posts = getBlogPosts();
 
   return (
     <div className="container mx-auto px-4 py-12">
@@ -26,8 +14,8 @@ export default async function BlogIndexPage() {
       <div className="grid gap-8">
         {posts.map((post) => (
           <Link href={`/blog/${post.slug}`} key={post.slug} className="block p-6 rounded-lg border hover:shadow-lg transition-shadow">
-            <h2 className="text-2xl font-bold">{post.title}</h2>
-            <p className="mt-2 text-gray-700">{post.excerpt}</p>
+            <h2 className="text-2xl font-bold">{post.metadata.title}</h2>
+            <p className="mt-2 text-gray-700">{post.metadata.excerpt}</p>
             <span className="mt-4 inline-block font-semibold text-primary">Read More &rarr;</span>
           </Link>
         ))}

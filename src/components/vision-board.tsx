@@ -11,17 +11,11 @@ import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautif
 import { unsplashImageSearch, type UnsplashImage } from '@/ai/flows/unsplash-image-search';
 import { UnsplashSearchDialog } from './unsplash-search-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { usePhotos, PhotoProvider } from '@/hooks/use-photos';
 
-interface VisionImage {
-    id: string;
-    src: string;
-    alt: string;
-    hint: string;
-}
-
-export function VisionBoard() {
+function VisionBoardContent() {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
-  const [images, setImages] = useState<VisionImage[]>([]);
+  const { photos, addPhoto, updatePhotoOrder } = usePhotos();
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<UnsplashImage[]>([]);
@@ -32,24 +26,20 @@ export function VisionBoard() {
     fileInputRef.current?.click();
   };
   
-  const addImage = (src: string, prompt: string) => {
-    const newImage: VisionImage = {
-        id: `image-${Date.now()}`,
+  const handleAddImage = (src: string, prompt: string) => {
+    addPhoto({
         src,
         alt: prompt,
         hint: prompt.split(' ').slice(0, 2).join(' '),
-    };
-    setImages(prev => [newImage, ...prev]);
+    });
   }
   
   const addUnsplashImage = (image: UnsplashImage) => {
-    const newImage: VisionImage = {
-        id: image.id,
+    addPhoto({
         src: image.urls.regular,
         alt: image.alt_description || "Unsplash image",
         hint: image.alt_description?.split(' ').slice(0, 2).join(' ') || "wedding",
-    };
-    setImages(prev => [newImage, ...prev]);
+    });
     setIsSearchDialogOpen(false);
   }
 
@@ -57,18 +47,11 @@ export function VisionBoard() {
     const { source, destination } = result;
     if (!destination) return;
 
-    // Draggable IDs are "generator" and "image-..."
-    // Draggable indices are 0 for generator, 1+ for images
-    // `react-beautiful-dnd` indices are 0-based for the list.
-    // So the generator is at index 0, and images are at indices 1 and up.
+    const reorderedPhotos = Array.from(photos);
+    const [movedPhoto] = reorderedPhotos.splice(source.index - 1, 1);
+    reorderedPhotos.splice(destination.index - 1, 0, movedPhoto);
     
-    const reorderedImages = Array.from(images);
-    // The `source.index` from dnd accounts for the generator at index 0
-    // but our `images` array does not. So we adjust by 1.
-    const [movedImage] = reorderedImages.splice(source.index - 1, 1);
-    reorderedImages.splice(destination.index - 1, 0, movedImage);
-    
-    setImages(reorderedImages);
+    updatePhotoOrder(reorderedPhotos);
   }
   
   const handleSearch = async (e: React.FormEvent) => {
@@ -134,11 +117,11 @@ export function VisionBoard() {
                                     {...provided.draggableProps}
                                     {...provided.dragHandleProps}
                                 >
-                                    <VisionBoardGenerator onImageGenerated={addImage} />
+                                    <VisionBoardGenerator onImageGenerated={handleAddImage} />
                                 </div>
                             )}
                         </Draggable>
-                        {images.map((image, index) => (
+                        {photos.map((image, index) => (
                              <Draggable key={image.id} draggableId={image.id} index={index + 1}>
                                 {(provided) => (
                                      <div
@@ -168,4 +151,12 @@ export function VisionBoard() {
         />
     </div>
   );
+}
+
+export function VisionBoard() {
+    return (
+        <PhotoProvider>
+            <VisionBoardContent />
+        </PhotoProvider>
+    )
 }
